@@ -305,54 +305,95 @@ export function AnalyzerWorkspace({
           onRecordUpdated={onRecordUpdated}
         />
       ) : (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 space-y-4">
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              Start an Intelligence Inspection
-            </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              Paste prose above, load a baseline sample, or launch one of the specialized workflows below with zero file size or usage limits.
-            </p>
+        <section
+          aria-label="Open-Source AI Detection & Content Intelligence Overview"
+          className="space-y-4"
+        >
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 space-y-4">
+            <div className="space-y-1">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                Open-Source AI Detector, Humanizer &amp; Content Authenticity Workbench
+              </h2>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                Veritas is a free, self-hosted alternative to Pangram, GPTZero, Originality.ai, and Turnitin—running deterministic stylometry and local LLMs with zero word caps, file limits, or subscriptions.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <button
+                type="button"
+                onClick={() => onNavigateTab?.('batch')}
+                className="p-3.5 text-left rounded-md border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer space-y-1"
+              >
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                  Parallel Batch Queue
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Analyze unlimited PDF, DOCX, image, audio, or video files concurrently.
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigateTab?.('code')}
+                className="p-3.5 text-left rounded-md border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer space-y-1"
+              >
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                  Code AI, AST &amp; Security
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Audit source code AST overlap, SPDX licenses, and adversarial smuggling.
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigateTab?.('provenance')}
+                className="p-3.5 text-left rounded-md border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer space-y-1"
+              >
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                  Veritas Proof &amp; Stylometry
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Mint Ed25519 drafting proofs or compare non-reversible author twins.
+                </p>
+              </button>
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            <button
-              type="button"
-              onClick={() => onNavigateTab?.('batch')}
-              className="p-3.5 text-left rounded-md border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer space-y-1"
-            >
-              <div className="font-semibold text-slate-900 dark:text-slate-100">
-                Parallel Batch Queue
+
+          <details className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-6 py-4 text-xs">
+            <summary className="font-semibold text-slate-900 dark:text-slate-100 cursor-pointer select-none">
+              Platform Architecture, Supported Formats &amp; Frequently Asked Questions
+            </summary>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-600 dark:text-slate-400 leading-relaxed">
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
+                  How does Veritas detect AI content without cloud lock-in?
+                </h3>
+                <p>
+                  Every scan evaluates sentence-level burstiness, perplexity variance, type-token ratio, and AI-spin heuristics locally first, with automatic 11-tier failover to Ollama, vLLM, LM Studio, or optional cloud APIs.
+                </p>
               </div>
-              <div className="text-slate-600 dark:text-slate-400">
-                Analyze unlimited PDF, DOCX, image, audio, or video files concurrently.
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
+                  Can I connect external tools or automate CI checks?
+                </h3>
+                <p>
+                  Yes—browse the self-hosted{' '}
+                  <a href="/api/docs" className="text-blue-700 dark:text-blue-400 underline">
+                    OpenAPI 3.1 API Explorer
+                  </a>
+                  , download{' '}
+                  <a href="/api/openapi.json" className="text-blue-700 dark:text-blue-400 underline">
+                    openapi.json
+                  </a>
+                  , or inspect machine-readable metadata at{' '}
+                  <a href="/llms.txt" className="text-blue-700 dark:text-blue-400 underline">
+                    llms.txt
+                  </a>
+                  .
+                </p>
               </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigateTab?.('code')}
-              className="p-3.5 text-left rounded-md border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer space-y-1"
-            >
-              <div className="font-semibold text-slate-900 dark:text-slate-100">
-                Code AI, AST & Security
-              </div>
-              <div className="text-slate-600 dark:text-slate-400">
-                Audit source code AST overlap, SPDX licenses, and adversarial smuggling.
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigateTab?.('provenance')}
-              className="p-3.5 text-left rounded-md border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer space-y-1"
-            >
-              <div className="font-semibold text-slate-900 dark:text-slate-100">
-                Veritas Proof & Stylometry
-              </div>
-              <div className="text-slate-600 dark:text-slate-400">
-                Mint Ed25519 drafting proofs or compare non-reversible author twins.
-              </div>
-            </button>
-          </div>
-        </div>
+            </div>
+          </details>
+        </section>
       )}
     </div>
   );

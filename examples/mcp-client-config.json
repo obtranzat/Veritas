@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "veritas-content-intelligence": {
+      "transport": "http",
+      "url": "http://127.0.0.1:3000/api/v1/mcp",
+      "headers": {
+        "Content-Type": "application/json",
+        "x-api-key": "REPLACE_WITH_ISSUED_KEY_IF_AUTH_ENABLED"
+      }
+    }
+  }
+}

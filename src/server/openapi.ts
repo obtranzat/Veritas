@@ -9,7 +9,7 @@ export function buildOpenApiSpec(baseUrl: string) {
         url: 'https://opensource.org/licenses/MIT',
       },
       description:
-        'Open-source, self-hosted REST + MCP + LTI 1.3 ecosystem for AI text/code detection, adversarial evasion defense, cryptographic Ed25519 human-authorship proofs, non-reversible author stylometric twins, grounded fact-checking & citation entailment, cross-lingual plagiarism, SEO/GEO optimization, and privacy-first airlock controls.',
+        'Open-source, self-hosted REST + SSE + MCP + LTI 1.3 ecosystem for AI text/code/media detection, adversarial evasion defense, cryptographic Ed25519 human-authorship proofs, non-reversible author stylometric twins, grounded fact-checking & citation entailment, cross-lingual plagiarism, SEO/GEO optimization, privacy airlock controls, and 11-tier AI provider failover routing.',
     },
     servers: [{ url: baseUrl || 'http://localhost:3000', description: 'Local / Self-Hosted Node' }],
     components: {
@@ -17,136 +17,438 @@ export function buildOpenApiSpec(baseUrl: string) {
         BearerApiKey: {
           type: 'http',
           scheme: 'bearer',
-          description: 'Pass x-api-key or Authorization: Bearer vrt_live_... for headless API clients with per-key rate limits.',
+          description:
+            'Pass x-api-key or Authorization: Bearer vrt_live_... for headless API clients with per-key RPM rate limits.',
         },
       },
     },
     paths: {
+      '/api/health': {
+        get: {
+          tags: ['System'],
+          summary: 'Liveness & readiness health check probe',
+          responses: { '200': { description: 'Service status ok + MIT license metadata' } },
+        },
+      },
+      '/api/openapi.json': {
+        get: {
+          tags: ['System'],
+          summary: 'OpenAPI 3.1 JSON specification',
+          responses: { '200': { description: 'Complete OpenAPI 3.1 JSON document' } },
+        },
+      },
+      '/api/docs': {
+        get: {
+          tags: ['System'],
+          summary: 'Interactive self-hosted API Explorer & Swagger documentation UI',
+          responses: { '200': { description: 'Self-contained HTML OpenAPI reference explorer' } },
+        },
+      },
       '/api/v1/detect': {
         post: {
-          summary: 'Run full Content Intelligence scan (AI, Authenticity, Quality, GEO/SEO, Academic Integrity, Adversarial Security & AI-Spin)',
+          tags: ['Core Forensics'],
+          summary:
+            'Run full Content Intelligence scan (AI, Authenticity, Quality, GEO/SEO, Academic Integrity, Adversarial Security & AI-Spin)',
           responses: { '200': { description: 'Complete DetectionRecord intelligence report' } },
         },
       },
-      '/api/v1/security/inspect': {
+      '/api/v1/analyze-media': {
         post: {
-          summary: 'Run adversarial evasion (zero-width, homoglyphs, Bidi, prompt-injection) and PII airlock inspection',
-          responses: { '200': { description: 'AdversarialSecurityReport and redacted preview' } },
+          tags: ['Core Forensics'],
+          summary: 'Analyze document (PDF/DOCX/TXT/RTF/ODT), image (PNG/JPG/WEBP/TIFF), audio, or video file',
+          responses: { '200': { description: 'DetectionRecord with mediaForensics breakdown' } },
         },
       },
-      '/api/v1/exclusions/recalculate': {
+      '/api/v1/detect/batch': {
         post: {
-          summary: 'Recalculate AI & plagiarism scores excluding quotes, bibliographies, headers, and matches < N words',
-          responses: { '200': { description: 'FilteredScoreResult' } },
+          tags: ['Core Forensics'],
+          summary: 'Queue unlimited document or media files for parallel processing',
+          responses: { '202': { description: 'Queued job object with SSE stream URL' } },
+        },
+      },
+      '/api/v1/analyze-url': {
+        post: {
+          tags: ['Core Forensics'],
+          summary: 'Crawl 1-10 same-origin web pages and run full Content Intelligence analysis',
+          responses: { '200': { description: 'Crawled DetectionRecord results' } },
+        },
+      },
+      '/api/v1/humanize': {
+        post: {
+          tags: ['Quality & Research'],
+          summary: 'Humanize prose at light/moderate/aggressive intensity and automatically re-verify',
+          responses: { '200': { description: 'Humanized revision with before/after detection scores' } },
         },
       },
       '/api/v1/fact-check': {
         post: {
-          summary: 'Verify factual claims and source credibility using live web search grounding',
+          tags: ['Quality & Research'],
+          summary: 'Verify factual claims and source credibility using web grounding or local fallback',
           responses: { '200': { description: 'FactCheckReport with claim verdicts and verified sources' } },
         },
       },
       '/api/v1/plagiarism-web': {
         post: {
-          summary: 'Cross-check distinctive passages against indexed web pages via search grounding',
+          tags: ['Quality & Research'],
+          summary: 'Cross-check distinctive passages against indexed web pages',
           responses: { '200': { description: 'Matched external URLs and overlapping excerpts' } },
         },
       },
       '/api/v1/plagiarism-crosslingual': {
         post: {
+          tags: ['Quality & Research'],
           summary: 'Detect translated / cross-language plagiarism across major world languages',
           responses: { '200': { description: 'CrossLingualMatch results' } },
         },
       },
       '/api/v1/citations/entailment': {
         post: {
+          tags: ['Quality & Research'],
           summary: 'Verify semantic entailment between a factual claim and its cited source URL',
           responses: { '200': { description: 'CitationEntailmentResult (Supported / Contradicted / Not Found)' } },
         },
       },
       '/api/v1/seo-analyze': {
         post: {
+          tags: ['Quality & Research'],
           summary: 'Run SEO optimization & Generative Engine Optimization (GEO) audit',
           responses: { '200': { description: 'SeoAnalysisReport + GeoAnalysisReport' } },
         },
       },
+      '/api/v1/exclusions/recalculate': {
+        post: {
+          tags: ['Quality & Research'],
+          summary: 'Recalculate AI & plagiarism scores excluding quotes, bibliographies, headers, and matches < N words',
+          responses: { '200': { description: 'FilteredScoreResult' } },
+        },
+      },
+      '/api/v1/citations': {
+        get: {
+          tags: ['Citations'],
+          summary: 'List saved bibliographic citations in the local vault',
+          responses: { '200': { description: 'CitationEntry[]' } },
+        },
+        post: {
+          tags: ['Citations'],
+          summary: 'Save a citation entry to the bibliography vault',
+          responses: { '201': { description: 'Created CitationEntry' } },
+        },
+      },
+      '/api/v1/citations/lookup': {
+        post: {
+          tags: ['Citations'],
+          summary: 'Resolve bibliographic metadata from a title, DOI, or URL',
+          responses: { '200': { description: 'Verified CitationEntry metadata' } },
+        },
+      },
+      '/api/v1/citations/{id}': {
+        delete: {
+          tags: ['Citations'],
+          summary: 'Delete a saved citation entry from the bibliography vault',
+          responses: { '200': { description: 'Deletion confirmation' } },
+        },
+      },
+      '/api/v1/security/inspect': {
+        post: {
+          tags: ['Security & Code'],
+          summary: 'Run adversarial evasion (zero-width, homoglyphs, Bidi, prompt-injection) and PII airlock inspection',
+          responses: { '200': { description: 'AdversarialSecurityReport and redacted preview' } },
+        },
+      },
+      '/api/v1/code-reports': {
+        get: {
+          tags: ['Security & Code'],
+          summary: 'List saved AI source-code & AST forensics reports',
+          responses: { '200': { description: 'CodeAnalysisReport[]' } },
+        },
+      },
       '/api/v1/analyze-code': {
         post: {
+          tags: ['Security & Code'],
           summary: 'Detect AI-generated source code, compute variable-rename-invariant AST fingerprint, and audit SPDX OSS licenses',
           responses: { '200': { description: 'CodeAnalysisReport' } },
         },
       },
       '/api/v1/authorship/profiles': {
-        get: { summary: 'List non-reversible Author Stylometric Twin profiles', responses: { '200': { description: 'AuthorStylometricProfile[]' } } },
-        post: { summary: 'Enroll or update a privacy-preserving Author Stylometric Twin vector', responses: { '201': { description: 'AuthorStylometricProfile' } } },
+        get: {
+          tags: ['Provenance & Authorship'],
+          summary: 'List non-reversible Author Stylometric Twin profiles',
+          responses: { '200': { description: 'AuthorStylometricProfile[]' } },
+        },
+        post: {
+          tags: ['Provenance & Authorship'],
+          summary: 'Enroll or update a privacy-preserving Author Stylometric Twin vector',
+          responses: { '201': { description: 'AuthorStylometricProfile' } },
+        },
+      },
+      '/api/v1/authorship/profiles/{id}': {
+        delete: {
+          tags: ['Provenance & Authorship'],
+          summary: 'Delete an enrolled Author Stylometric Twin profile',
+          responses: { '200': { description: 'Deletion confirmation' } },
+        },
       },
       '/api/v1/authorship/verify': {
-        post: { summary: 'Compare new submission stylometric vector against baseline author twin for contract cheating/drift', responses: { '200': { description: 'AuthorDriftVerification' } } },
+        post: {
+          tags: ['Provenance & Authorship'],
+          summary: 'Compare new submission stylometric vector against baseline author twin for contract cheating/drift',
+          responses: { '200': { description: 'AuthorDriftVerification' } },
+        },
+      },
+      '/api/v1/proofs': {
+        get: {
+          tags: ['Provenance & Authorship'],
+          summary: 'List minted Ed25519 Veritas Proof cryptographic attestation bundles',
+          responses: { '200': { description: 'VeritasProofBundle[]' } },
+        },
       },
       '/api/v1/proofs/create': {
-        post: { summary: 'Mint an Ed25519-signed Veritas Proof Merkle attestation bundle from local drafting metrics', responses: { '201': { description: 'VeritasProofBundle' } } },
+        post: {
+          tags: ['Provenance & Authorship'],
+          summary: 'Mint an Ed25519-signed Veritas Proof Merkle attestation bundle from local drafting metrics',
+          responses: { '201': { description: 'VeritasProofBundle' } },
+        },
       },
       '/api/v1/proofs/verify': {
-        post: { summary: 'Cryptographically verify an Ed25519 Veritas Proof bundle and optional raw text SHA-256', responses: { '200': { description: 'Signature & Merkle verification result' } } },
+        post: {
+          tags: ['Provenance & Authorship'],
+          summary: 'Cryptographically verify an Ed25519 Veritas Proof bundle and optional raw text SHA-256',
+          responses: { '200': { description: 'Signature & Merkle verification result' } },
+        },
       },
       '/api/v1/proofs/{id}/badge.svg': {
-        get: { summary: 'Serve self-hosted SVG human-authorship verification seal', responses: { '200': { description: 'image/svg+xml badge' } } },
+        get: {
+          tags: ['Provenance & Authorship'],
+          summary: 'Serve self-hosted SVG human-authorship verification seal',
+          responses: { '200': { description: 'image/svg+xml badge' } },
+        },
       },
-      '/api/v1/privacy-config': {
-        get: { summary: 'Get active Privacy Airlock & Local-Only runtime policy', responses: { '200': { description: 'PrivacyRuntimeConfig' } } },
-        put: { summary: 'Update Privacy Airlock & Local-Only runtime policy', responses: { '200': { description: 'PrivacyRuntimeConfig' } } },
+      '/api/v1/jobs': {
+        get: {
+          tags: ['Batch Jobs'],
+          summary: 'List all queued, active, and completed batch analysis jobs',
+          responses: { '200': { description: 'QueueJob[]' } },
+        },
       },
-      '/api/v1/mcp': {
-        post: { summary: 'Model Context Protocol (MCP) JSON-RPC 2.0 server endpoint for IDE & AI agent integrations', responses: { '200': { description: 'JSON-RPC 2.0 response' } } },
+      '/api/v1/jobs/{id}': {
+        get: {
+          tags: ['Batch Jobs'],
+          summary: 'Retrieve status and per-file progress of a specific batch job',
+          responses: { '200': { description: 'QueueJob' } },
+        },
       },
-      '/api/v1/lti/config.json': {
-        get: { summary: 'LTI 1.3 Advantage Tool Registration manifest for Canvas, Moodle, Blackboard, and D2L', responses: { '200': { description: 'LTI 1.3 JSON configuration' } } },
-      },
-      '/api/v1/citations': {
-        get: { summary: 'List saved bibliographic citations in the local vault', responses: { '200': { description: 'CitationEntry[]' } } },
-        post: { summary: 'Save a citation entry to the bibliography vault', responses: { '201': { description: 'Created CitationEntry' } } },
-      },
-      '/api/v1/citations/lookup': {
-        post: { summary: 'Resolve bibliographic metadata from a title, DOI, or URL', responses: { '200': { description: 'Verified CitationEntry metadata' } } },
-      },
-      '/api/v1/detect/batch': {
-        post: { summary: 'Queue unlimited document or media files for parallel processing', responses: { '202': { description: 'Queued job object with SSE stream URL' } } },
-      },
-      '/api/v1/humanize': {
-        post: { summary: 'Humanize prose at light/moderate/aggressive intensity and re-verify', responses: { '200': { description: 'Humanized revision with before/after scores' } } },
-      },
-      '/api/v1/analyze-url': {
-        post: { summary: 'Crawl 1–10 same-origin web pages and run full Content Intelligence analysis', responses: { '200': { description: 'Crawled DetectionRecord results' } } },
-      },
-      '/api/v1/analyze-media': {
-        post: { summary: 'Analyze image (PNG/JPG/WEBP/TIFF), audio, or video files', responses: { '200': { description: 'DetectionRecord with mediaForensics breakdown' } } },
+      '/api/v1/jobs/{id}/stream': {
+        get: {
+          tags: ['Batch Jobs'],
+          summary: 'Subscribe to live Server-Sent Events (SSE) progress updates for a batch job',
+          responses: { '200': { description: 'text/event-stream SSE feed' } },
+        },
       },
       '/api/v1/history': {
-        get: { summary: 'Retrieve full detection and intelligence history', responses: { '200': { description: 'DetectionRecord[]' } } },
+        get: {
+          tags: ['History & Exports'],
+          summary: 'Retrieve full detection and intelligence history',
+          responses: { '200': { description: 'DetectionRecord[]' } },
+        },
+      },
+      '/api/v1/history/{id}': {
+        delete: {
+          tags: ['History & Exports'],
+          summary: 'Delete a saved detection record',
+          responses: { '200': { description: 'Deletion confirmation' } },
+        },
+      },
+      '/api/v1/history/{id}/comments': {
+        post: {
+          tags: ['History & Exports'],
+          summary: 'Attach an editorial or reviewer collaboration note to a detection record',
+          responses: { '201': { description: 'Updated DetectionRecord' } },
+        },
       },
       '/api/v1/analytics': {
-        get: { summary: 'Aggregate platform authenticity, quality, SEO, and AI detection analytics', responses: { '200': { description: 'AnalyticsSummary' } } },
+        get: {
+          tags: ['History & Exports'],
+          summary: 'Aggregate platform authenticity, quality, SEO, and AI detection analytics',
+          responses: { '200': { description: 'AnalyticsSummary' } },
+        },
+      },
+      '/api/v1/export/docx': {
+        post: {
+          tags: ['History & Exports'],
+          summary: 'Export a single DetectionRecord report as a formatted Microsoft Word (.docx) file',
+          responses: { '200': { description: 'DOCX binary attachment' } },
+        },
+      },
+      '/api/v1/export/bulk': {
+        post: {
+          tags: ['History & Exports'],
+          summary: 'Export multiple DetectionRecords as a compressed ZIP bundle (JSON, TXT, CSV, DOCX)',
+          responses: { '200': { description: 'ZIP binary attachment' } },
+        },
+      },
+      '/api/v1/keys': {
+        get: {
+          tags: ['Governance & Integrations'],
+          summary: 'List issued API key prefixes, RPM limits, and request counters',
+          responses: { '200': { description: 'ApiKeyRecord[]' } },
+        },
+        post: {
+          tags: ['Governance & Integrations'],
+          summary: 'Issue a new SHA-256-hashed bearer API key with custom RPM limit (requires Admin role when auth enabled)',
+          responses: { '201': { description: 'Created key metadata + one-time rawKey' } },
+        },
+      },
+      '/api/v1/keys/{id}': {
+        patch: {
+          tags: ['Governance & Integrations'],
+          summary: 'Enable, disable, or adjust rate limit for an API key',
+          responses: { '200': { description: 'Updated ApiKeyRecord' } },
+        },
+        delete: {
+          tags: ['Governance & Integrations'],
+          summary: 'Revoke and delete an API key',
+          responses: { '200': { description: 'Revocation confirmation' } },
+        },
+      },
+      '/api/v1/plugins': {
+        get: {
+          tags: ['Governance & Integrations'],
+          summary: 'List built-in and custom detection plugins',
+          responses: { '200': { description: 'PluginConfig[]' } },
+        },
+        post: {
+          tags: ['Governance & Integrations'],
+          summary: 'Register a ReDoS-safe custom keyword or RegExp detection plugin',
+          responses: { '201': { description: 'Created PluginConfig' } },
+        },
+      },
+      '/api/v1/plugins/{id}': {
+        patch: {
+          tags: ['Governance & Integrations'],
+          summary: 'Toggle or update an existing detection plugin',
+          responses: { '200': { description: 'Updated PluginConfig' } },
+        },
+        delete: {
+          tags: ['Governance & Integrations'],
+          summary: 'Remove a custom detection plugin',
+          responses: { '200': { description: 'Deletion confirmation' } },
+        },
+      },
+      '/api/v1/users': {
+        get: {
+          tags: ['Governance & Integrations'],
+          summary: 'List local RBAC team members (Admin, Researcher, Reviewer, Viewer)',
+          responses: { '200': { description: 'TeamUser[]' } },
+        },
+        post: {
+          tags: ['Governance & Integrations'],
+          summary: 'Add a new RBAC team member',
+          responses: { '201': { description: 'Created TeamUser' } },
+        },
+      },
+      '/api/v1/users/{id}': {
+        patch: {
+          tags: ['Governance & Integrations'],
+          summary: 'Update a team member role or active flag',
+          responses: { '200': { description: 'Updated TeamUser' } },
+        },
+        delete: {
+          tags: ['Governance & Integrations'],
+          summary: 'Delete a team member from the local directory',
+          responses: { '200': { description: 'Deletion confirmation' } },
+        },
+      },
+      '/api/v1/audit-logs': {
+        get: {
+          tags: ['Governance & Integrations'],
+          summary: 'Retrieve immutable local audit trail entries',
+          responses: { '200': { description: 'AuditLogEntry[]' } },
+        },
+      },
+      '/api/v1/privacy-config': {
+        get: {
+          tags: ['Governance & Integrations'],
+          summary: 'Get active Privacy Airlock & Local-Only runtime policy',
+          responses: { '200': { description: 'PrivacyRuntimeConfig' } },
+        },
+        put: {
+          tags: ['Governance & Integrations'],
+          summary: 'Update Privacy Airlock & Local-Only runtime policy',
+          responses: { '200': { description: 'PrivacyRuntimeConfig' } },
+        },
+      },
+      '/api/v1/privacy/erasure': {
+        post: {
+          tags: ['Governance & Integrations'],
+          summary: 'Execute GDPR / privacy erasure across stored records, citations, profiles, and proofs',
+          responses: { '200': { description: 'Erasure summary counts' } },
+        },
+      },
+      '/api/v1/mcp': {
+        post: {
+          tags: ['Protocols'],
+          summary: 'Model Context Protocol (MCP) JSON-RPC 2.0 server endpoint for IDE & AI agent integrations',
+          responses: { '200': { description: 'JSON-RPC 2.0 response' } },
+        },
+      },
+      '/api/v1/lti/config.json': {
+        get: {
+          tags: ['Protocols'],
+          summary: 'LTI 1.3 Advantage Tool Registration manifest for Canvas, Moodle, Blackboard, and D2L',
+          responses: { '200': { description: 'LTI 1.3 JSON configuration' } },
+        },
       },
       '/api/v1/ai-routing/status': {
-        get: { summary: 'Get 11-tier AI provider hierarchy health, credit balances, failover history, admin alerts, offline queue, and cache telemetry', responses: { '200': { description: 'AiRoutingTelemetry' } } },
+        get: {
+          tags: ['AI Failover Router'],
+          summary:
+            'Get 11-tier AI provider hierarchy health, credit balances, failover history, admin alerts, offline queue, and cache telemetry',
+          responses: { '200': { description: 'AiRoutingTelemetry' } },
+        },
       },
       '/api/v1/ai-routing/policy': {
-        put: { summary: 'Update routing strategy (local-first/cheapest/fastest/highest-quality), offline mode, preferred local family, or cache policy', responses: { '200': { description: 'AiRoutingPolicyConfig' } } },
+        put: {
+          tags: ['AI Failover Router'],
+          summary:
+            'Update routing strategy (local-first/cheapest/fastest/highest-quality), offline mode, preferred local family, or cache policy',
+          responses: { '200': { description: 'AiRoutingPolicyConfig' } },
+        },
       },
       '/api/v1/ai-routing/providers/{id}': {
-        patch: { summary: 'Toggle provider state, reset cooldown, adjust credit budget guardrails, or select active model', responses: { '200': { description: 'AiProviderState' } } },
+        patch: {
+          tags: ['AI Failover Router'],
+          summary: 'Toggle provider state, reset cooldown, adjust credit budget guardrails, or select active model',
+          responses: { '200': { description: 'AiProviderState' } },
+        },
       },
       '/api/v1/ai-routing/probe': {
-        post: { summary: 'Actively probe configured local inference servers (Ollama, vLLM, LM Studio) and cloud credit thresholds', responses: { '200': { description: 'Updated provider health list' } } },
+        post: {
+          tags: ['AI Failover Router'],
+          summary: 'Actively probe configured local inference servers (Ollama, vLLM, LM Studio) and cloud credit thresholds',
+          responses: { '200': { description: 'Updated provider health list' } },
+        },
       },
       '/api/v1/ai-routing/alerts/ack': {
-        post: { summary: 'Acknowledge one or all administrator failover and credit exhaustion alerts', responses: { '200': { description: 'Acknowledged alert count' } } },
+        post: {
+          tags: ['AI Failover Router'],
+          summary: 'Acknowledge one or all administrator failover and credit exhaustion alerts',
+          responses: { '200': { description: 'Acknowledged alert count' } },
+        },
       },
       '/api/v1/ai-routing/queue/process': {
-        post: { summary: 'Replay deferred cloud jobs (fact-checks, live web plagiarism, citation lookups) queued during offline/exhausted periods', responses: { '200': { description: 'Queue replay summary' } } },
+        post: {
+          tags: ['AI Failover Router'],
+          summary:
+            'Replay deferred cloud jobs (fact-checks, live web plagiarism, citation lookups) queued during offline/exhausted periods',
+          responses: { '200': { description: 'Queue replay summary' } },
+        },
       },
       '/api/v1/ai-routing/cache': {
-        delete: { summary: 'Flush SHA-256 inference response cache', responses: { '200': { description: 'Cache cleared status' } } },
+        delete: {
+          tags: ['AI Failover Router'],
+          summary: 'Flush SHA-256 inference response cache',
+          responses: { '200': { description: 'Cache cleared status' } },
+        },
       },
     },
   };

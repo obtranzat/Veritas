@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: veritas-config
+  namespace: veritas
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  APP_URL: "https://veritas.example.com"
+  VERITAS_DATA_DIR: "/app/data"
+  VERITAS_REQUIRE_AUTH: "true"
+  VERITAS_FRAME_DENY: "true"
+  VERITAS_GLOBAL_RPM: "600"
+  VERITAS_MAX_FILE_BYTES: "104857600"
+  VERITAS_MAX_BATCH_FILES: "100"
+  VERITAS_JSON_LIMIT: "10mb"
+  OLLAMA_BASE_URL: "http://ollama:11434"
+  OLLAMA_MODEL: "llama3.2"

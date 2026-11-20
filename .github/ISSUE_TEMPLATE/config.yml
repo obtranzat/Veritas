@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security Vulnerability Disclosure
+    url: https://github.com/veritas-oss/veritas/security/advisories/new
+    about: Privately report security issues under our Responsible Disclosure Policy
+  - name: Community Q&A & Help (GitHub Discussions)
+    url: https://github.com/veritas-oss/veritas/discussions
+    about: Ask deployment questions, share provider configs, or request community help
+  - name: Self-Hosted Documentation Hub
+    url: https://github.com/veritas-oss/veritas/tree/main/docs
+    about: Read installation, API, Kubernetes, security, and troubleshooting manuals

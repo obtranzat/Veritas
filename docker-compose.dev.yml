@@ -1,0 +1,34 @@
+# Development Compose file with source-code bind mount and local Ollama/Redis/Postgres
+services:
+  veritas-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - VERITAS_REQUIRE_AUTH=${VERITAS_REQUIRE_AUTH:-false}
+      - VERITAS_GLOBAL_RPM=${VERITAS_GLOBAL_RPM:-1200}
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - veritas_dev_data:/app/data
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama_dev_data:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  veritas_dev_data:
+  ollama_dev_data:

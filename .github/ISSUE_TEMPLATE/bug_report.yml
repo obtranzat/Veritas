@@ -1,0 +1,49 @@
+name: Bug Report
+description: Report a reproducible bug, regression, or unexpected behavior in Veritas
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! For security vulnerabilities, **do not file a public bug report**—please follow `SECURITY.md` instead.
+  - type: input
+    id: version
+    attributes:
+      label: Veritas Version / Commit SHA
+      placeholder: "e.g. v3.0.0 or main@abc1234"
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment Method
+      options:
+        - Local Node.js (`npm run dev` / `npm start`)
+        - Docker / Docker Compose
+        - Kubernetes
+        - Cloud Platform (GCP / AWS / Azure / DigitalOcean)
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Describe the Bug
+      description: Clear description of what happened vs what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Open workspace '...'
+        2. Submit payload / click '...'
+        3. Observe error '...'
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs or API Response
+      render: shell

@@ -35,6 +35,27 @@ describe('Veritas Full API, Integration, Smoke & Acceptance Suite', () => {
     const openapi = await request(app).get('/api/openapi.json').expect(200);
     expect(openapi.body.openapi).toBe('3.1.0');
     expect(openapi.body.paths['/api/v1/detect']).toBeDefined();
+    expect(openapi.body.paths['/api/docs']).toBeDefined();
+    expect(openapi.body.paths['/api/v1/ai-routing/status']).toBeDefined();
+
+    const docs = await request(app).get('/api/docs').expect(200);
+    expect(docs.headers['content-type']).toContain('text/html');
+    expect(docs.text).toContain('Veritas API Documentation');
+    expect(docs.text).toContain('application/ld+json');
+
+    const robots = await request(app).get('/robots.txt').expect(200);
+    expect(robots.text).toContain('PerplexityBot');
+    expect(robots.text).toContain('Sitemap:');
+
+    const sitemap = await request(app).get('/sitemap.xml').expect(200);
+    expect(sitemap.headers['content-type']).toContain('application/xml');
+    expect(sitemap.text).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+    expect(sitemap.text).toContain('/api/docs');
+
+    const schema = await request(app).get('/schema.json').expect(200);
+    expect(schema.body['@context']).toBe('https://schema.org');
+    expect(Array.isArray(schema.body['@graph'])).toBe(true);
+    expect(schema.body['@graph'].some((item: { '@type': string }) => item['@type'] === 'FAQPage')).toBe(true);
 
     const lti = await request(app).get('/api/v1/lti/config.json').expect(200);
     expect(lti.body.privacy_level).toBe('anonymous');

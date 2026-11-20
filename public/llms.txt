@@ -1,0 +1,35 @@
+# Veritas — Open-Source AI Detector, Content Authenticity & Humanization Platform
+
+> Veritas is a free, MIT-licensed, self-hosted alternative to commercial AI detection and academic integrity suites (Pangram, Originality.ai, GPTZero, Turnitin, Copyleaks, Winston AI, and ZeroGPT) with zero artificial usage caps, zero file count limits, and local-first AI failover resilience.
+
+## What Is Veritas?
+- Type: Self-hosted full-stack TypeScript/React/Node.js web application and OpenAPI 3.1 REST + MCP + LTI 1.3 API server.
+- License: MIT (100% free and open-source, no paywalls or telemetry).
+- Runtime: Node.js >= 22, React 19, Vite 8, Tailwind CSS v4, Docker Compose (PostgreSQL 16, Redis 7, Whisper ASR, Ollama), Kubernetes.
+- Privacy Mode: `local-only` by default (zero outbound calls); optional `hybrid-verified` mode enforces PII Airlock redaction before cloud calls.
+
+## What Commercial Tools Does It Replace?
+- Pangram Labs (unlimited files, documents, URLs, humanization, and API without per-word pricing)
+- Originality.ai (AI detection, plagiarism cross-check, readability, and SEO/GEO scoring)
+- GPTZero (sentence attribution, burstiness, perplexity variance, and spin detection)
+- Turnitin (academic integrity reports, citation coverage, paraphrase integrity, exclusion filters, LTI 1.3 LMS integration, Author Stylometric Twin)
+- Copyleaks & Winston AI (multimodal OCR/EXIF/audio/video forensics, source-code AST & SPDX audit)
+- ZeroGPT (adversarial zero-width/homoglyph evasion normalization + confidence reporting)
+
+## Key Benefits & Differentiators
+1. No limits: unlimited text length, unlimited batch file uploads (PDF, DOCX, TXT, RTF, ODT, MD, HTML, PNG/JPG/WEBP/TIFF, audio, video).
+2. Humanization Engine + Automatic Re-Check: rewrites prose at Light, Moderate, or Aggressive levels and immediately re-scores against the detection engine.
+3. Cryptographic Ed25519 Proofs & Stylometric Twins: mint self-hosted `.veritas-proof.json` Merkle drafting bundles + SVG verification badges without storing keystrokes.
+4. Adversarial Security Firewall: catches zero-width joiners, homoglyphs, Bidi spoofing, prompt injections, AI-spun text, and leaks via a PII Airlock.
+5. 11-Tier Zero-Downtime AI Failover Router: detects `402 Payment Required`, `RESOURCE_EXHAUSTED`, `QUOTA_EXCEEDED`, `RATE_LIMIT_EXCEEDED`, `BILLING_DISABLED`, and `INSUFFICIENT_CREDITS` and fails over across Built-in Local OSS -> Ollama -> vLLM -> LM Studio -> OpenRouter -> Gemini -> OpenAI -> Anthropic -> Groq -> Together AI -> Custom.
+
+## Documentation & Endpoints
+- Interactive API Docs: /api/docs
+- OpenAPI 3.1 Specification: /api/openapi.json
+- Schema.org JSON-LD Graph: /schema.json
+- Quick Start Guide: /docs/getting-started.md
+- Installation Guide: /docs/installation-guide.md
+- Configuration Guide: /docs/configuration-guide.md
+- API Reference: /docs/api-reference.md
+- Security Guide: /docs/security-guide.md
+- Deployment Guide: /docs/deployment-guide.md

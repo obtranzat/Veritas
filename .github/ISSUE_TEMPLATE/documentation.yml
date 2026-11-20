@@ -1,0 +1,22 @@
+name: Documentation Improvement
+description: Report unclear, outdated, or missing documentation, examples, or deployment guides
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: input
+    id: doc-page
+    attributes:
+      label: Documentation File or Section
+      placeholder: "e.g. docs/deployment-guide.md or README.md#docker"
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What needs clarification or updating?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Improvement (Optional)

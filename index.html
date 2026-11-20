@@ -3,18 +3,133 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Veritas — Open-Source AI Detection &amp; Humanization Platform</title>
+    <title>Veritas — Open-Source AI Detector &amp; Content Intelligence</title>
     <meta
       name="description"
-      content="Open-source, self-hosted AI content detection, multimodal media forensics, web link crawler, and humanization workbench with zero artificial limits."
+      content="Free open-source, self-hosted AI detector, humanizer, plagiarism checker, SEO/GEO studio &amp; Ed25519 provenance platform with zero usage or file limits."
     />
-    <meta property="og:title" content="Veritas — Open-Source AI Detection & Humanization Platform" />
+    <meta
+      name="keywords"
+      content="open source ai detector, self-hosted ai detection, pangram alternative, gptzero alternative, originality ai alternative, ai humanizer, content authenticity, ai content analysis, ed25519 proof, ollama ai detection"
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="author" content="Veritas Open Source Project" />
+    <meta name="theme-color" content="#1d4ed8" />
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml" />
+    <link rel="alternate" type="text/plain" title="LLM Context (GEO)" href="/llms.txt" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Veritas Content Intelligence" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content="Veritas — Open-Source AI Detector & Content Intelligence" />
     <meta
       property="og:description"
-      content="Open-source, self-hosted AI content detection, multimodal media forensics, web link crawler, and humanization workbench with zero artificial limits."
+      content="Free open-source, self-hosted AI detector, humanizer, plagiarism checker, SEO/GEO studio & Ed25519 provenance platform with zero usage or file limits."
     />
-    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-preview.jpg" />
+    <meta property="og:image:alt" content="Veritas Open-Source AI Detection and Content Intelligence Dashboard" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Veritas — Open-Source AI Detector & Content Intelligence" />
+    <meta
+      name="twitter:description"
+      content="Free self-hosted alternative to Pangram, GPTZero & Originality.ai with unlimited batch uploads, local LLMs, and 11-tier AI failover."
+    />
+    <meta name="twitter:image" content="/og-preview.jpg" />
+    <meta name="twitter:image:alt" content="Veritas Open-Source AI Detection Platform" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "name": "Veritas Open Source Project",
+            "email": "gaikhomun@gmail.com",
+            "sameAs": ["https://github.com/veritas-oss/veritas"]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "Veritas — Open-Source AI Detector & Content Intelligence",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Linux, macOS, Windows, Docker, Kubernetes",
+            "softwareVersion": "3.0.0",
+            "license": "https://opensource.org/licenses/MIT",
+            "isAccessibleForFree": true,
+            "description": "Free, MIT-licensed, self-hosted alternative to Pangram, Originality.ai, GPTZero, Turnitin, Copyleaks, Winston AI, and ZeroGPT with unlimited file uploads, AI humanization, fact-checking, SEO/GEO, code AST forensics, and 11-tier AI failover.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          },
+          {
+            "@type": "SoftwareSourceCode",
+            "name": "veritas-content-intelligence",
+            "codeRepository": "https://github.com/veritas-oss/veritas",
+            "programmingLanguage": ["TypeScript", "JavaScript", "SQL"],
+            "runtimePlatform": "Node.js >= 22",
+            "license": "https://opensource.org/licenses/MIT"
+          },
+          {
+            "@type": "TechArticle",
+            "headline": "Veritas Open-Source Content Intelligence & Local-First AI Failover Architecture",
+            "description": "Architecture guide covering deterministic stylometry, adversarial evasion normalization, Ed25519 provenance proofs, and 11-tier AI routing."
+          },
+          {
+            "@type": "HowTo",
+            "name": "Self-Host Veritas AI Detector in 2 Minutes",
+            "totalTime": "PT2M",
+            "step": [
+              {
+                "@type": "HowToStep",
+                "position": 1,
+                "name": "Install dependencies",
+                "text": "Clone the repository, run npm install --legacy-peer-deps, and copy .env.example to .env."
+              },
+              {
+                "@type": "HowToStep",
+                "position": 2,
+                "name": "Launch Veritas server",
+                "text": "Run npm run dev or docker compose up -d --build to start port 3000 with optional Ollama and Whisper ASR."
+              },
+              {
+                "@type": "HowToStep",
+                "position": 3,
+                "name": "Inspect text, documents, URLs, or code",
+                "text": "Analyze unlimited files in the web workspace or call /api/v1/detect and /api/v1/humanize."
+              }
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is Veritas?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Veritas is a free, MIT-licensed, self-hosted AI detection, content authenticity, humanization, plagiarism, fact-checking, SEO/GEO, and code forensics platform with zero artificial usage caps."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What commercial tools does Veritas replace?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Veritas is an open-source alternative to Pangram, Originality.ai, GPTZero, Turnitin, Copyleaks, Winston AI, and ZeroGPT."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can Veritas run 100% offline with local LLMs?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Veritas prioritizes Tier #1 built-in local OSS stylometry and local inference servers (Ollama, vLLM, LM Studio) with zero cloud API keys required."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

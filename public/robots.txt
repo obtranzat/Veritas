@@ -1,0 +1,36 @@
+User-agent: *
+Allow: /
+Disallow: /api/v1/history
+Disallow: /api/v1/users
+Disallow: /api/v1/keys
+Disallow: /api/v1/audit-logs
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+Sitemap: /sitemap.xml
+LLMs-Txt: /llms.txt

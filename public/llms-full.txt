@@ -1,0 +1,47 @@
+# Veritas — Full Technical Reference for AI Assistants (llms-full.txt)
+
+## Identity & Quick Facts
+- Name: Veritas Content Intelligence Ecosystem
+- Version: 3.0.0
+- License: MIT
+- Primary Language: TypeScript (Node.js >= 22 backend, React 19 frontend)
+- Default Port: 3000
+- Supported Upload Formats: Plain text, PDF, DOCX, TXT, RTF, ODT, MD, CSV, HTML, PNG, JPG, JPEG, WEBP, TIFF, MP3/WAV audio, MP4/WEBM video, Source Code (TypeScript, JavaScript, Python, Go, Rust, Java, C++, etc.).
+
+## How Veritas Works
+1. Normalization & Security Airlock (`src/server/security.ts`): Inspects input for invisible zero-width Unicode characters, Cyrillic/Greek homoglyphs, Bidi control characters, and prompt-injection payloads; redacts emails, phone numbers, government IDs, payment cards, and IPs before external egress.
+2. Content Intelligence Pipeline (`src/server/pipeline.ts`): Evaluates sentence-level perplexity indicators, burstiness variance, lexical diversity (TTR, hapax legomena), AI-Spin paraphrase markers, readability indices (Flesch, Kincaid, Gunning Fog, SMOG, Coleman-Liau, ARI), SEO + GEO (Generative Engine Optimization), academic citation coverage, and cross-lingual plagiarism.
+3. 11-Tier Local-First AI Router (`src/server/aiRouter.ts`): Executes on Built-in Local OSS heuristics (Tier 1) or local inference engines (Ollama, vLLM, LM Studio) first; automatically routes around cloud `402` billing or `429` quota errors with SHA-256 response caching and offline job queuing.
+4. Cryptographic Provenance (`src/server/stylometry.ts` & `src/server/security.ts`): Computes non-reversible author cadence vectors and mints Ed25519-signed Merkle `.veritas-proof.json` attestation bundles and SVG badges.
+
+## Quick Installation
+```bash
+git clone https://github.com/veritas-oss/veritas.git
+cd veritas
+npm install --legacy-peer-deps
+cp .env.example .env
+npm run dev
+```
+
+Or via Docker Compose (includes Postgres 16, Redis 7, Whisper ASR, and Ollama):
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+
+## Core REST Endpoints
+- `GET /api/health` — Readiness/liveness check (`status: "ok", license: "MIT"`)
+- `GET /api/docs` — Interactive HTML API Explorer
+- `GET /api/openapi.json` — OpenAPI 3.1 JSON specification
+- `POST /api/v1/detect` — Full text Content Intelligence detection
+- `POST /api/v1/analyze-media` — Document, image, audio, or video forensics
+- `POST /api/v1/detect/batch` — Parallel multi-file batch queue with SSE `/api/v1/jobs/:id/stream`
+- `POST /api/v1/analyze-url` — SSRF-protected web page crawler (1–10 same-origin pages)
+- `POST /api/v1/humanize` — Light/Moderate/Aggressive humanizer with automatic re-check
+- `POST /api/v1/fact-check` — Claim extraction and grounded source verification
+- `POST /api/v1/citations/entailment` — Semantic entailment check against cited source URL
+- `POST /api/v1/analyze-code` — AI code detector, variable-rename-invariant AST fingerprint, SPDX audit
+- `POST /api/v1/proofs/create` & `/api/v1/proofs/verify` — Ed25519 authorship proofs
+- `GET /api/v1/ai-routing/status` — 11-tier failover router telemetry & credit monitor
+- `POST /api/v1/mcp` — Model Context Protocol (JSON-RPC 2.0) server
+- `GET /api/v1/lti/config.json` — LTI 1.3 LMS configuration for Canvas/Moodle/Blackboard

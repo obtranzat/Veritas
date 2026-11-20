@@ -171,8 +171,90 @@ const NAV_SECTIONS: { heading: string; items: NavItem[] }[] = [
 
 const ALL_NAV_ITEMS: NavItem[] = NAV_SECTIONS.flatMap((s) => s.items);
 
+const WORKSPACE_SEO_META: Record<WorkspaceTab, { title: string; description: string }> = {
+  analyzer: {
+    title: 'Veritas — Open-Source AI Detector & Content Intelligence',
+    description:
+      'Free self-hosted AI content detector, authenticity grader, readability scorer, and document forensics workbench with zero usage or upload limits.',
+  },
+  batch: {
+    title: 'Batch File AI Detection Queue — Veritas Open-Source',
+    description:
+      'Analyze unlimited PDF, DOCX, TXT, image, audio, and video files simultaneously with live SSE progress and bulk ZIP/DOCX exports.',
+  },
+  crawler: {
+    title: 'Web Link AI Content Crawler — Veritas Open-Source',
+    description:
+      'Crawl 1-10 same-origin web pages with SSRF protection to detect AI-generated articles and audit on-page SEO and GEO signals.',
+  },
+  media: {
+    title: 'Image, Audio & Video Deepfake & OCR Forensics — Veritas',
+    description:
+      'Analyze images (EXIF/OCR), audio, and video transcriptions for synthetic AI signals using local Whisper and multimodal forensics.',
+  },
+  humanizer: {
+    title: 'Open-Source AI Humanizer & Re-Checker — Veritas',
+    description:
+      'Humanize AI-flagged prose at light, moderate, or aggressive levels while preserving facts and automatically re-verifying against AI detection.',
+  },
+  factcheck: {
+    title: 'Fact-Checking, Citation Entailment & Plagiarism — Veritas',
+    description:
+      'Verify factual claims, check citation entailment, and run web and cross-lingual plagiarism audits on self-hosted infrastructure.',
+  },
+  seo: {
+    title: 'SEO, GEO & 6-Formula Readability Studio — Veritas',
+    description:
+      'Audit SERP snippets, entity density, Generative Engine Optimization (GEO), and 6 academic readability formulas offline.',
+  },
+  academic: {
+    title: 'Academic Integrity & Citations Vault — Veritas',
+    description:
+      'Generate APA, MLA, Chicago, IEEE, and BibTeX citations alongside paraphrase integrity and exclusion filter scoring.',
+  },
+  code: {
+    title: 'AI Code Detector, AST Fingerprinting & Security — Veritas',
+    description:
+      'Detect LLM-generated source code, compute variable-rename-invariant AST fingerprints, audit SPDX licenses, and strip adversarial smuggling.',
+  },
+  provenance: {
+    title: 'Ed25519 Proofs & Author Stylometric Twin — Veritas',
+    description:
+      'Mint cryptographic Ed25519 human-authorship proofs and self-hosted SVG verification badges with privacy-safe stylometry.',
+  },
+  history: {
+    title: 'Detection Analytics, Audit Logs & Bulk Exports — Veritas',
+    description:
+      'Review scan history, platform authenticity analytics, immutable security audit trails, and DOCX/CSV/JSON/ZIP exports.',
+  },
+  api: {
+    title: 'OpenAPI 3.1 REST, MCP & LTI 1.3 LMS Integrations — Veritas',
+    description:
+      'Manage SHA-256 bearer API keys, ReDoS-safe regex plugins, Model Context Protocol tools, and Canvas/Moodle LTI 1.3.',
+  },
+  resilience: {
+    title: '11-Tier AI Failover & Local Ollama/vLLM Router — Veritas',
+    description:
+      'Zero-downtime local-first routing across Ollama, vLLM, LM Studio, OpenRouter, Gemini, OpenAI, Anthropic, Groq, and Together AI.',
+  },
+  team: {
+    title: 'Privacy Airlock, PII Redaction & Self-Hosted RBAC — Veritas',
+    description:
+      'Configure strict local-only mode, outbound PII Airlock scrubbing, role-based access control, and GDPR erasure.',
+  },
+};
+
+function resolveInitialWorkspace(): WorkspaceTab {
+  if (typeof window === 'undefined') return 'analyzer';
+  const param = new URLSearchParams(window.location.search).get('workspace');
+  if (param && ALL_NAV_ITEMS.some((item) => item.id === param)) {
+    return param as WorkspaceTab;
+  }
+  return 'analyzer';
+}
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>('analyzer');
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>(resolveInitialWorkspace);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
@@ -224,6 +306,20 @@ export default function App() {
     if (darkMode) root.classList.add('dark');
     else root.classList.remove('dark');
   }, [darkMode]);
+
+  useEffect(() => {
+    const meta = WORKSPACE_SEO_META[activeTab] || WORKSPACE_SEO_META.analyzer;
+    document.title = meta.title;
+    const descEl = document.querySelector('meta[name="description"]');
+    if (descEl) descEl.setAttribute('content', meta.description);
+    const url = new URL(window.location.href);
+    if (activeTab === 'analyzer') {
+      url.searchParams.delete('workspace');
+    } else {
+      url.searchParams.set('workspace', activeTab);
+    }
+    window.history.replaceState(null, '', url.toString());
+  }, [activeTab]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {

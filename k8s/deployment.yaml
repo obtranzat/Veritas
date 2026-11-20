@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: veritas-app
+  namespace: veritas
+  labels:
+    app: veritas-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: veritas-app
+  template:
+    metadata:
+      labels:
+        app: veritas-app
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: veritas
+          image: ghcr.io/veritas-oss/veritas:3.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: veritas-config
+            - secretRef:
+                name: veritas-secrets
+                optional: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: veritas-data
+              mountPath: /app/data
+      volumes:
+        - name: veritas-data
+          persistentVolumeClaim:
+            claimName: veritas-data-pvc

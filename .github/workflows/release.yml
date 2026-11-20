@@ -1,0 +1,58 @@
+name: Semantic Release & Container Publish
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Semantic version tag to release (e.g. v3.0.1)"
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+  security-events: write
+
+jobs:
+  verify-and-release:
+    name: Verify Release Gates & Publish GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run full release validation (Lint + >=95% Coverage + Build)
+        run: npm run validate:release
+
+      - name: Security dependency audit
+        run: npm audit --audit-level=high
+
+      - name: Build production Docker image
+        run: docker build -f Dockerfile.prod -t veritas-content-intelligence:${{ github.ref_name }} .
+
+      - name: Create GitHub Release with auto-generated notes
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            LICENSE
+            CHANGELOG.md
+            coverage/coverage-summary.json

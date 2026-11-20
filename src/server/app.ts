@@ -17,6 +17,7 @@ import type {
 } from '../types/veritas.ts';
 import { aiRouter } from './aiRouter.ts';
 import { buildOpenApiSpec } from './openapi.ts';
+import { buildRobotsTxt, buildSchemaOrgGraph, buildSitemapXml } from './seo.ts';
 import {
   enqueueBatchFilesJob,
   jobEvents,
@@ -206,6 +207,96 @@ export function createVeritasApp(options: CreateVeritasAppOptions = {}): express
         ? process.env.APP_URL
         : `${req.protocol}://${req.get('host')}`;
     res.json(buildOpenApiSpec(baseUrl));
+  });
+
+  app.get('/robots.txt', (req, res) => {
+    const baseUrl =
+      process.env.APP_URL && process.env.APP_URL !== 'MY_APP_URL'
+        ? process.env.APP_URL
+        : `${req.protocol}://${req.get('host')}`;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.send(buildRobotsTxt(baseUrl));
+  });
+
+  app.get('/sitemap.xml', (req, res) => {
+    const baseUrl =
+      process.env.APP_URL && process.env.APP_URL !== 'MY_APP_URL'
+        ? process.env.APP_URL
+        : `${req.protocol}://${req.get('host')}`;
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.send(buildSitemapXml(baseUrl));
+  });
+
+  app.get('/schema.json', (req, res) => {
+    const baseUrl =
+      process.env.APP_URL && process.env.APP_URL !== 'MY_APP_URL'
+        ? process.env.APP_URL
+        : `${req.protocol}://${req.get('host')}`;
+    res.setHeader('Content-Type', 'application/ld+json; charset=utf-8');
+    res.json(buildSchemaOrgGraph(baseUrl));
+  });
+
+  app.get('/api/docs', (req, res) => {
+    const baseUrl =
+      process.env.APP_URL && process.env.APP_URL !== 'MY_APP_URL'
+        ? process.env.APP_URL
+        : `${req.protocol}://${req.get('host')}`;
+    const spec = buildOpenApiSpec(baseUrl);
+    const rows = Object.entries(spec.paths)
+      .flatMap(([routePath, methods]) =>
+        Object.entries(methods as Record<string, { summary?: string; tags?: string[] }>).map(
+          ([method, meta]) =>
+            `<tr><td><span class="badge">${method.toUpperCase()}</span></td><td><code>${routePath}</code></td><td>${(meta.tags || ['General']).join(', ')}</td><td>${meta.summary || ''}</td></tr>`
+        )
+      )
+      .join('\n');
+    const docTitle = `Veritas API Documentation (${spec.info.version}) — OpenAPI 3.1 Reference`;
+    const docDesc =
+      'Self-hosted OpenAPI 3.1 documentation for Veritas open-source AI detection, humanization, fact-checking, code forensics, Ed25519 proofs, and 11-tier AI failover routing.';
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${docTitle}</title>
+  <meta name="description" content="${docDesc}" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="${baseUrl}/api/docs" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="${docTitle}" />
+  <meta property="og:description" content="${docDesc}" />
+  <meta property="og:image" content="${baseUrl}/og-preview.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${docTitle}" />
+  <meta name="twitter:description" content="${docDesc}" />
+  <script type="application/ld+json">${JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: docTitle,
+    description: docDesc,
+    url: `${baseUrl}/api/docs`,
+  })}</script>
+  <style>
+    body{font-family:system-ui,-apple-system,sans-serif;max-width:1120px;margin:2rem auto;padding:0 1.25rem;color:#0f172a;background:#f8fafc}
+    h1{font-size:1.5rem;margin-bottom:.25rem} p{color:#475569;font-size:.9rem}
+    table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;margin-top:1.25rem;font-size:.85rem}
+    th,td{padding:.65rem .75rem;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top}
+    th{background:#f1f5f9;font-weight:600} code{font-family:ui-monospace,monospace;font-size:.82rem}
+    .badge{display:inline-block;padding:.15rem .45rem;border-radius:4px;font-family:ui-monospace,monospace;font-size:.72rem;font-weight:700;background:#dbeafe;color:#1d4ed8}
+    a{color:#1d4ed8;text-decoration:none} a:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <h1>${spec.info.title} (v${spec.info.version})</h1>
+  <p>${spec.info.description}</p>
+  <p>OpenAPI 3.1 JSON: <a href="/api/openapi.json">/api/openapi.json</a> · LLM Context: <a href="/llms.txt">/llms.txt</a> · Schema.org: <a href="/schema.json">/schema.json</a> · Base URL: <code>${baseUrl}</code></p>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Group</th><th>Summary</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+</body>
+</html>`);
   });
 
   // Sliding-window per-IP rate limiter for /api/v1
