@@ -5,8 +5,8 @@ Get Veritas running locally in under three minutes with **zero external accounts
 ## Step 1: Clone & Install
 
 ```bash
-git clone https://github.com/veritas-oss/veritas.git
-cd veritas
+git clone https://github.com/obtranzat/Veritas.git
+cd Veritas
 npm install --legacy-peer-deps
 cp .env.example .env
 ```

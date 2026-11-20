@@ -12,7 +12,7 @@ Welcome to the Veritas open-source community.
 | **Feature Proposals & RFCs** | [GitHub Issues — Feature Request](../.github/ISSUE_TEMPLATE/feature_request.yml) or GitHub Discussions (`Ideas`) |
 | **Usage Help & Self-Hosting Q&A** | GitHub Discussions (`Q&A`) |
 | **Documentation Fixes** | [GitHub Issues — Documentation](../.github/ISSUE_TEMPLATE/documentation.yml) |
-| **Security Vulnerabilities** | Email `gaikhomun@gmail.com` or GitHub Private Security Advisory — see [`SECURITY.md`](../SECURITY.md) |
+| **Security Vulnerabilities** | Email `obtranzat@gmail.com` or GitHub Private Security Advisory — see [`SECURITY.md`](../SECURITY.md) |
 
 ---
 
@@ -52,6 +52,6 @@ All canonical documentation lives version-controlled under [`docs/`](./README.md
 
 ## 4. Maintainer Contact
 
-- **Lead Maintainer**: `gaikhomun@gmail.com`
+- **Lead Maintainer**: `obtranzat@gmail.com`
 - **Code of Conduct Enforcement**: [`CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md)
 - **Contribution Workflow**: [`CONTRIBUTING.md`](../CONTRIBUTING.md)

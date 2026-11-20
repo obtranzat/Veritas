@@ -34,7 +34,7 @@ This Code of Conduct applies within all community spaces (GitHub Issues, Pull Re
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project maintainers at **gaikhomun@gmail.com**. All complaints will be reviewed and investigated promptly and fairly. All project maintainers are obligated to respect the privacy and security of the reporter of any incident.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project maintainers at **obtranzat@gmail.com**. All complaints will be reviewed and investigated promptly and fairly. All project maintainers are obligated to respect the privacy and security of the reporter of any incident.
 
 ## Attribution
 

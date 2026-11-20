@@ -25,8 +25,8 @@ sudo apt-get install -y nodejs git build-essential
 node -v
 
 # Clone & install Veritas
-git clone https://github.com/veritas-oss/veritas.git
-cd veritas
+git clone https://github.com/obtranzat/Veritas.git
+cd Veritas
 npm install --legacy-peer-deps
 cp .env.example .env
 
@@ -50,8 +50,8 @@ brew install node@22 git
 echo 'export PATH="/opt/homebrew/opt/node@22/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 
-git clone https://github.com/veritas-oss/veritas.git
-cd veritas
+git clone https://github.com/obtranzat/Veritas.git
+cd Veritas
 npm install --legacy-peer-deps
 cp .env.example .env
 npm run dev
@@ -65,8 +65,8 @@ npm run dev
 1. Install **Node.js 22 LTS** from https://nodejs.org and **Git for Windows**.
 2. Open PowerShell:
    ```powershell
-   git clone https://github.com/veritas-oss/veritas.git
-   cd veritas
+   git clone https://github.com/obtranzat/Veritas.git
+   cd Veritas
    npm install --legacy-peer-deps
    Copy-Item .env.example .env
    npm run dev

@@ -20,7 +20,7 @@ Veritas takes the security of self-hosted content intelligence nodes, academic i
 
 Instead, report vulnerabilities privately through one of these channels:
 1. **GitHub Private Security Advisories (Preferred)**: Open a private advisory in the repository `Security -> Advisories -> Report a vulnerability`.
-2. **Direct Maintainer Email**: Send details to **gaikhomun@gmail.com** with subject `[SECURITY] Veritas Vulnerability Report`.
+2. **Direct Maintainer Email**: Send details to **obtranzat@gmail.com** with subject `[SECURITY] Veritas Vulnerability Report`.
 
 ### What to Include
 - Affected component, endpoint, or file path

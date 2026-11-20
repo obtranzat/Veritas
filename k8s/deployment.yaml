@@ -21,7 +21,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: veritas
-          image: ghcr.io/veritas-oss/veritas:3.0.0
+          image: ghcr.io/obtranzat/veritas:3.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

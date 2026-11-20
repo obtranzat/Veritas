@@ -104,7 +104,7 @@ Ready-to-apply Kustomize manifests live in [`k8s/`](../k8s/kustomization.yaml).
 2. **Clone & build into `/opt/veritas`:**
 
    ```bash
-   sudo git clone https://github.com/gaikhomun/veritas.git /opt/veritas
+   sudo git clone https://github.com/obtranzat/Veritas.git /opt/veritas
    cd /opt/veritas
    npm ci && npm run build
    cp .env.example .env

@@ -10,9 +10,9 @@ export function buildSchemaOrgGraph(baseUrl: string) {
         '@id': `${origin}/#organization`,
         name: 'Veritas Open Source Project',
         url: origin,
-        email: 'gaikhomun@gmail.com',
+        email: 'obtranzat@gmail.com',
         logo: `${origin}/og-preview.jpg`,
-        sameAs: ['https://github.com/veritas-oss/veritas'],
+        sameAs: ['https://github.com/obtranzat/Veritas'],
       },
       {
         '@type': 'SoftwareApplication',
@@ -55,7 +55,7 @@ export function buildSchemaOrgGraph(baseUrl: string) {
         name: 'veritas-content-intelligence',
         description:
           'Open-source TypeScript, React 19, Node.js, Express, Docker, and Kubernetes codebase for self-hosted AI detection and content authenticity.',
-        codeRepository: 'https://github.com/veritas-oss/veritas',
+        codeRepository: 'https://github.com/obtranzat/Veritas',
         programmingLanguage: ['TypeScript', 'JavaScript', 'SQL'],
         runtimePlatform: 'Node.js >= 22',
         license: 'https://opensource.org/licenses/MIT',

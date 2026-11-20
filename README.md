@@ -1,7 +1,7 @@
 # Veritas — Open-Source AI Detector, Content Authenticity & Humanization Platform
 
-[![CI Security & Coverage Gate](https://github.com/veritas-oss/veritas/actions/workflows/ci-security-gate.yml/badge.svg)](https://github.com/veritas-oss/veritas/actions/workflows/ci-security-gate.yml)
-[![Visual Regression](https://github.com/veritas-oss/veritas/actions/workflows/visual-regression.yml/badge.svg)](https://github.com/veritas-oss/veritas/actions/workflows/visual-regression.yml)
+[![CI Security & Coverage Gate](https://github.com/obtranzat/Veritas/actions/workflows/ci-security-gate.yml/badge.svg)](https://github.com/obtranzat/Veritas/actions/workflows/ci-security-gate.yml)
+[![Visual Regression](https://github.com/obtranzat/Veritas/actions/workflows/visual-regression.yml/badge.svg)](https://github.com/obtranzat/Veritas/actions/workflows/visual-regression.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js >= 22](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](package.json)
 [![OpenAPI 3.1](https://img.shields.io/badge/OpenAPI-3.1.0-informational.svg)](docs/api-reference.md)
@@ -89,8 +89,8 @@ Most AI content detectors charge steep per-word fees, lock batch uploads and API
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/veritas-oss/veritas.git
-cd veritas
+git clone https://github.com/obtranzat/Veritas.git
+cd Veritas
 
 # 2. Install dependencies
 npm install --legacy-peer-deps

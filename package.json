@@ -3,13 +3,13 @@
   "version": "3.0.0",
   "description": "Open-source, self-hosted AI content detection, multimodal media forensics, web crawler, cryptographic provenance, humanization, and 11-tier AI failover platform.",
   "license": "MIT",
-  "homepage": "https://github.com/veritas-oss/veritas#readme",
+  "homepage": "https://github.com/obtranzat/Veritas#readme",
   "bugs": {
-    "url": "https://github.com/veritas-oss/veritas/issues"
+    "url": "https://github.com/obtranzat/Veritas/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/veritas-oss/veritas.git"
+    "url": "git+https://github.com/obtranzat/Veritas.git"
   },
   "keywords": [
     "ai-detection",

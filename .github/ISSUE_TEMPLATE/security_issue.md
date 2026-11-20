@@ -12,6 +12,6 @@ To protect self-hosted Veritas operators, please **do not post security vulnerab
 Instead, report vulnerabilities privately using one of these channels:
 
 1. **GitHub Private Vulnerability Reporting** (`Security` tab -> `Advisories` -> `Report a vulnerability`)
-2. **Encrypted/Direct Maintainer Contact**: `gaikhomun@gmail.com`
+2. **Encrypted/Direct Maintainer Contact**: `obtranzat@gmail.com`
 
 See [`SECURITY.md`](../../SECURITY.md) for response SLAs, PGP/disclosure policy, and supported versions.

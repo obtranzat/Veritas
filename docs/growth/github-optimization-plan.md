@@ -7,14 +7,14 @@ Complete specification for maximizing repository discoverability in GitHub Searc
 ## 1. Repository Name, Description & About Section
 
 ### Repository Slug
-- **Primary**: `veritas` (under org `veritas-oss/veritas` or `gaikhomun/veritas`)
+- **Primary**: `Veritas` (`https://github.com/obtranzat/Veritas`)
 - **NPM Package Name**: `veritas-content-intelligence`
 
 ### GitHub "About" Description (Max 350 chars — 249 chars exact)
 > Open-source, self-hosted AI detector & content intelligence platform. Free alternative to Pangram, GPTZero & Originality.ai with unlimited uploads, AI humanizer, fact-checking, SEO/GEO, Ed25519 authorship proofs & local Ollama/vLLM 11-tier failover.
 
 ### GitHub Website URL Field
-- Point to interactive docs or live sandbox: `https://veritas-oss.github.io/veritas` (or active Cloud Run / self-hosted URL)
+- Point to interactive docs or live sandbox: `https://obtranzat.github.io/Veritas` (or active self-hosted URL)
 
 ### Social Preview Image (`1280 × 640px` / `16:9`)
 - **Asset Ready**: [`docs/screenshots/intelligence-hub.jpg`](../screenshots/intelligence-hub.jpg) and [`public/og-preview.jpg`](../../public/og-preview.jpg).
