@@ -22,6 +22,7 @@ Every box below must pass (`[x]`) before committing code, merging a Pull Request
 - [x] **Dependabot & PR Dependency Review**: Configured in `.github/dependabot.yml` and `.github/workflows/dependency-review.yml`.
 - [x] **Pre-Commit Hook Protection**: Configured via `.pre-commit-config.yaml` and `.githooks/pre-commit` (`npm run hooks:install`).
 - [x] **Least-Privilege GitHub Actions Permissions**: All workflows scope `permissions:` explicitly.
+- [ ] **GitHub Default Branch Ruleset (`main`)**: Apply `.github/rulesets/protect-main.json` in `Settings -> Rules -> Rulesets -> Import a ruleset` (or run `bash scripts/protect-main.sh`) to block deletions, force pushes, and unverified PR merges.
 
 ## 3. Application & Infrastructure Security Verification
 

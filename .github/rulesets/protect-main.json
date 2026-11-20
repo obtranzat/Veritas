@@ -1,0 +1,58 @@
+{
+  "name": "Protect main branch",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "exclude": [],
+      "include": [
+        "~DEFAULT_BRANCH"
+      ]
+    }
+  },
+  "rules": [
+    {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    },
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": true,
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": true
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": true,
+        "do_not_enforce_on_create": false,
+        "required_status_checks": [
+          {
+            "context": "Typecheck, Audit, Unit/API/Security Tests & >=95% Coverage"
+          },
+          {
+            "context": "Gitleaks Secret Scan"
+          },
+          {
+            "context": "Semgrep OWASP & Secrets SAST"
+          },
+          {
+            "context": "Forbidden Credential & Key File Check"
+          },
+          {
+            "context": "Review PR Dependency & License Changes"
+          },
+          {
+            "context": "CodeQL Analyze (javascript-typescript)"
+          }
+        ]
+      }
+    }
+  ]
+}
