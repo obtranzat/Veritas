@@ -44,4 +44,4 @@ if __name__ == "__main__":
             "aiProbability": result["aiProbability"],
         },
     )
-    print("Security:", client.inspect_security("Reach me at researcher@university.edu"))
+    print("Security:", client.inspect_security("Reach me at researcher@example.com"))

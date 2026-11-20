@@ -201,14 +201,19 @@ export function classifyProviderFailure(
   };
 }
 
+function isConfiguredSecret(val?: string): boolean {
+  return Boolean(
+    val && val.trim() && val !== 'MY_GEMINI_API_KEY' && !/^your_.*_here$/i.test(val.trim())
+  );
+}
+
 function buildInitialProviders(): AiProviderState[] {
-  const hasGeminiKey =
-    Boolean(process.env.GEMINI_API_KEY) && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY';
-  const hasOpenRouter = Boolean(process.env.OPENROUTER_API_KEY);
-  const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
-  const hasAnthropic = Boolean(process.env.ANTHROPIC_API_KEY);
-  const hasGroq = Boolean(process.env.GROQ_API_KEY);
-  const hasTogether = Boolean(process.env.TOGETHER_API_KEY);
+  const hasGeminiKey = isConfiguredSecret(process.env.GEMINI_API_KEY);
+  const hasOpenRouter = isConfiguredSecret(process.env.OPENROUTER_API_KEY);
+  const hasOpenAI = isConfiguredSecret(process.env.OPENAI_API_KEY);
+  const hasAnthropic = isConfiguredSecret(process.env.ANTHROPIC_API_KEY);
+  const hasGroq = isConfiguredSecret(process.env.GROQ_API_KEY);
+  const hasTogether = isConfiguredSecret(process.env.TOGETHER_API_KEY);
   const hasCustom = Boolean(process.env.CUSTOM_AI_BASE_URL);
 
   const hasOllamaEnv = Boolean(process.env.OLLAMA_BASE_URL);
@@ -570,13 +575,12 @@ class ResilientAiRouter {
       ollama: Boolean(process.env.OLLAMA_BASE_URL),
       vllm: Boolean(process.env.VLLM_BASE_URL),
       lmstudio: Boolean(process.env.LMSTUDIO_BASE_URL),
-      openrouter: Boolean(process.env.OPENROUTER_API_KEY),
-      gemini:
-        Boolean(process.env.GEMINI_API_KEY) && process.env.GEMINI_API_KEY !== 'MY_GEMINI_API_KEY',
-      openai: Boolean(process.env.OPENAI_API_KEY),
-      anthropic: Boolean(process.env.ANTHROPIC_API_KEY),
-      groq: Boolean(process.env.GROQ_API_KEY),
-      together: Boolean(process.env.TOGETHER_API_KEY),
+      openrouter: isConfiguredSecret(process.env.OPENROUTER_API_KEY),
+      gemini: isConfiguredSecret(process.env.GEMINI_API_KEY),
+      openai: isConfiguredSecret(process.env.OPENAI_API_KEY),
+      anthropic: isConfiguredSecret(process.env.ANTHROPIC_API_KEY),
+      groq: isConfiguredSecret(process.env.GROQ_API_KEY),
+      together: isConfiguredSecret(process.env.TOGETHER_API_KEY),
       custom: Boolean(process.env.CUSTOM_AI_BASE_URL),
     };
     for (const p of this.providers) {

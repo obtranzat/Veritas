@@ -194,7 +194,9 @@ function createInitialStore(): StoreData {
     },
   ];
 
-  const defaultRawKey = 'vrt_live_opensource_local_dev_key_9f82a1';
+  const defaultRawKey =
+    process.env.VERITAS_BOOTSTRAP_API_KEY ||
+    `vrt_live_${crypto.randomBytes(18).toString('hex')}`;
   const apiKeys: ApiKeyRecord[] = [
     {
       id: 'key-default',

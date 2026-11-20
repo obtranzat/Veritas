@@ -1,0 +1,34 @@
+title = "Veritas Gitleaks Secret Scanning Policy"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "veritas-bearer-api-key"
+description = "Veritas live bearer API token (vrt_live_...)"
+regex = '''vrt_live_[A-Za-z0-9_]{20,}'''
+keywords = ["vrt_live_"]
+
+[[rules]]
+id = "database-uri-with-credentials"
+description = "Database URI with non-placeholder embedded password"
+regex = '''(postgres|postgresql|mysql|mongodb(\+srv)?|redis):\/\/[^:\s]+:[^@\s${}<>]+@'''
+keywords = ["postgresql://", "postgres://", "mysql://", "mongodb://", "redis://"]
+
+[allowlist]
+description = "Allow documentation placeholders and synthetic unit test fixtures"
+paths = [
+  '''^\.env\.example$''',
+  '''^tests/''',
+  '''^docs/''',
+  '''^examples/''',
+]
+regexes = [
+  '''your_[a-z0-9_]+_here''',
+  '''MY_GEMINI_API_KEY''',
+  '''MY_APP_URL''',
+  '''CHANGE_ME''',
+  '''REPLACE_WITH_''',
+  '''sk_(test|or-test|oa-test|gem-test|ant-test|groq-test|tog-test)''',
+  '''vrt_live_\.\.\.''',
+]

@@ -42,7 +42,8 @@
     "test:perf": "node scripts/benchmark.mjs",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
-    "validate:release": "npm run lint && npm run test:coverage && npm run build"
+    "validate:release": "npm run lint && npm run test:coverage && npm run build",
+    "hooks:install": "git config core.hooksPath .githooks && chmod +x .githooks/pre-commit"
   },
   "dependencies": {
     "@google/genai": "^3.6.1",

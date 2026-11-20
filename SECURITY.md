@@ -14,24 +14,26 @@ Veritas takes the security of self-hosted content intelligence nodes, academic i
 
 ---
 
-## Reporting a Vulnerability (Responsible Disclosure)
+## Responsible Disclosure Policy & Safe Harbor
 
 **Please do not report security vulnerabilities through public GitHub Issues or Discussions.**
 
 Instead, report vulnerabilities privately through one of these channels:
-1. **GitHub Private Security Advisories**: Open a private advisory in the repository `Security -> Advisories -> Report a vulnerability`.
+1. **GitHub Private Security Advisories (Preferred)**: Open a private advisory in the repository `Security -> Advisories -> Report a vulnerability`.
 2. **Direct Maintainer Email**: Send details to **gaikhomun@gmail.com** with subject `[SECURITY] Veritas Vulnerability Report`.
 
 ### What to Include
-- Affected component/endpoint/file path
-- Reproduction steps or proof-of-concept request
-- Potential security impact (e.g., SSRF, auth bypass, XSS, RCE, path traversal)
+- Affected component, endpoint, or file path
+- Minimal reproduction steps or proof-of-concept request (without testing against third-party live systems)
+- Potential security impact (e.g., SSRF, auth bypass, XSS, RCE, secret exposure, path traversal)
 - Suggested remediation (if known)
 
-### Response Commitments
+### Coordinated Disclosure Commitments & Safe Harbor
 - **Acknowledgment**: Within **48 hours**
 - **Triage & Severity Assessment**: Within **5 business days**
-- **Fix & Coordinated Advisory**: Critical/High issues targeted within **7–14 days**; reporters are credited (with consent) in `CHANGELOG.md` and release advisories.
+- **Fix & Coordinated Advisory**: Critical/High issues targeted within **7–14 days**; reporters are credited (with consent) in `CHANGELOG.md` and GitHub Security Advisories.
+- **Safe Harbor**: We will not pursue legal action against researchers who conduct good-faith vulnerability testing on their own local Veritas instances, avoid accessing or modifying third-party data, and follow responsible disclosure timelines.
+- **Automated Secret & SAST Gate**: Every PR and push runs **Gitleaks**, **TruffleHog**, **Semgrep**, **CodeQL**, and **Dependabot / Dependency Review** workflows under `.github/workflows/`.
 
 ---
 

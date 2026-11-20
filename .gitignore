@@ -4,9 +4,31 @@ dist/
 coverage/
 .DS_Store
 *.log
-.env*
+
+# Environment files & secrets
+.env
+.env.*
 !.env.example
+
+# Cryptographic keys, certificates & key stores
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.jks
+credentials.json
+secrets.json
+service-account*.json
+config.local.*
+
+# Private directories, runtime stores, temporary artifacts & backups
+private/
+tmp/
+backups/
+data/*.json
+k8s/secret.yaml
+
+# Test & Playwright artifacts
 playwright-report/
 test-results/
-data/veritas-store.json
-k8s/secret.yaml
