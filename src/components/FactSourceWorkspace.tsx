@@ -44,7 +44,7 @@ export function FactSourceWorkspace({
     setSelectedRecordId(id);
     const rec = records.find((r) => r.id === id);
     if (rec) {
-      setText(rec.fullText);
+      setText(rec.fullText ?? '');
       if (rec.factCheck) setFactReport(rec.factCheck);
       if (rec.plagiarism.webMatches) setWebMatches(rec.plagiarism.webMatches);
       if (rec.crossLingualMatches) setCrossLingualMatches(rec.crossLingualMatches);

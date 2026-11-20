@@ -268,27 +268,45 @@ export default function App() {
         fetch('/api/v1/ai-routing/status'),
       ]);
 
+      const parsed = await Promise.all(
+        responses.map(async (r) => {
+          if (!r.ok) return null;
+          try {
+            return await r.json();
+          } catch {
+            return null;
+          }
+        })
+      );
       const [hData, aData, jData, kData, pData, uData, lData, cData, crData, apData, prData, pcData, rtData] =
-        await Promise.all(responses.map((r) => r.json()));
+        parsed;
 
       const nextRecords = Array.isArray(hData) ? (hData as DetectionRecord[]) : [];
       const nextUsers = Array.isArray(uData) ? (uData as TeamUser[]) : [];
-      setRecords(nextRecords);
-      setActiveRecord((prev) =>
-        prev ? nextRecords.find((r) => r.id === prev.id) || nextRecords[0] || null : nextRecords[0] || null
-      );
-      setAnalytics(aData as AnalyticsSummary);
-      setJobs(Array.isArray(jData) ? (jData as QueueJob[]) : []);
-      setApiKeys(Array.isArray(kData) ? (kData as ApiKeyRecord[]) : []);
-      setPlugins(Array.isArray(pData) ? (pData as PluginConfig[]) : []);
-      setUsers(nextUsers);
-      setActiveReviewerId((prev) => prev || nextUsers[0]?.id || '');
-      setAuditLogs(Array.isArray(lData) ? (lData as AuditLogEntry[]) : []);
-      setCitations(Array.isArray(cData) ? (cData as CitationEntry[]) : []);
-      setCodeReports(Array.isArray(crData) ? (crData as CodeAnalysisReport[]) : []);
-      setAuthorProfiles(Array.isArray(apData) ? (apData as AuthorStylometricProfile[]) : []);
-      setProofs(Array.isArray(prData) ? (prData as VeritasProofBundle[]) : []);
-      setPrivacyConfig(pcData as PrivacyRuntimeConfig);
+      if (Array.isArray(hData)) {
+        setRecords(nextRecords);
+        setActiveRecord((prev) =>
+          prev ? nextRecords.find((r) => r.id === prev.id) || nextRecords[0] || null : nextRecords[0] || null
+        );
+      }
+      if (aData && typeof aData === 'object' && 'totalScans' in aData) {
+        setAnalytics(aData as AnalyticsSummary);
+      }
+      if (Array.isArray(jData)) setJobs(jData as QueueJob[]);
+      if (Array.isArray(kData)) setApiKeys(kData as ApiKeyRecord[]);
+      if (Array.isArray(pData)) setPlugins(pData as PluginConfig[]);
+      if (Array.isArray(uData)) {
+        setUsers(nextUsers);
+        setActiveReviewerId((prev) => prev || nextUsers[0]?.id || '');
+      }
+      if (Array.isArray(lData)) setAuditLogs(lData as AuditLogEntry[]);
+      if (Array.isArray(cData)) setCitations(cData as CitationEntry[]);
+      if (Array.isArray(crData)) setCodeReports(crData as CodeAnalysisReport[]);
+      if (Array.isArray(apData)) setAuthorProfiles(apData as AuthorStylometricProfile[]);
+      if (Array.isArray(prData)) setProofs(prData as VeritasProofBundle[]);
+      if (pcData && typeof pcData === 'object' && 'mode' in pcData) {
+        setPrivacyConfig(pcData as PrivacyRuntimeConfig);
+      }
       if (rtData && Array.isArray((rtData as AiRoutingTelemetry).providers)) {
         setRoutingTelemetry(rtData as AiRoutingTelemetry);
       }
@@ -496,7 +514,7 @@ export default function App() {
               </label>
               <select
                 id="active-reviewer-select"
-                value={activeReviewerId}
+                value={activeReviewerId ?? ''}
                 onChange={(e) => {
                   setActiveReviewerId(e.target.value);
                   const chosen = users.find((u) => u.id === e.target.value);
@@ -794,7 +812,7 @@ export default function App() {
                 ref={searchInputRef}
                 type="text"
                 aria-label="Search workspaces, scan history, code reports, or proofs"
-                value={searchQuery}
+                value={searchQuery ?? ''}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Jump to workspace, scan record, proof ID, or code report..."
                 className="flex-1 text-sm bg-transparent text-slate-900 dark:text-slate-100 focus:outline-none"

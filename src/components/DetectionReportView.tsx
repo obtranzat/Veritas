@@ -909,7 +909,7 @@ export function DetectionReportView({
                 <input
                   type="text"
                   aria-label="Target SEO keyword"
-                  value={seoTargetKw}
+                  value={seoTargetKw ?? ''}
                   onChange={(e) => setSeoTargetKw(e.target.value)}
                   placeholder="Target SEO keyword..."
                   className="text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded px-3 py-1.5 text-slate-900 dark:text-slate-100"
@@ -1094,7 +1094,7 @@ export function DetectionReportView({
                 <label className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={exFilters.excludeQuotes}
+                    checked={Boolean(exFilters.excludeQuotes)}
                     onChange={(e) =>
                       void handleRecalculateExclusions({
                         ...exFilters,
@@ -1107,7 +1107,7 @@ export function DetectionReportView({
                 <label className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={exFilters.excludeBibliography}
+                    checked={Boolean(exFilters.excludeBibliography)}
                     onChange={(e) =>
                       void handleRecalculateExclusions({
                         ...exFilters,
@@ -1120,7 +1120,7 @@ export function DetectionReportView({
                 <label className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={exFilters.excludeHeaders}
+                    checked={Boolean(exFilters.excludeHeaders)}
                     onChange={(e) =>
                       void handleRecalculateExclusions({
                         ...exFilters,
@@ -1133,7 +1133,7 @@ export function DetectionReportView({
                 <label className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                   <span>Min N-gram Words:</span>
                   <select
-                    value={exFilters.minMatchWords}
+                    value={exFilters.minMatchWords ?? 5}
                     onChange={(e) =>
                       void handleRecalculateExclusions({
                         ...exFilters,
@@ -1375,7 +1375,7 @@ export function DetectionReportView({
                 </label>
                 <select
                   aria-label="Review note author"
-                  value={commentAuthorId}
+                  value={commentAuthorId || users[0]?.id || ''}
                   onChange={(e) => setCommentAuthorId(e.target.value)}
                   className="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-800 dark:text-slate-200"
                 >
@@ -1387,7 +1387,7 @@ export function DetectionReportView({
                 </select>
               </div>
               <textarea
-                value={commentText}
+                value={commentText ?? ''}
                 onChange={(e) => setCommentText(e.target.value)}
                 rows={3}
                 placeholder="Document manual verification notes, source provenance, or editorial feedback..."

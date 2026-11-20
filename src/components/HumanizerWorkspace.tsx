@@ -20,15 +20,15 @@ interface HumanizerWorkspaceProps {
 }
 
 export function HumanizerWorkspace({
-  initialText,
+  initialText = '',
   initialRecordId,
   records,
   onRevisionSaved,
   onNotify,
 }: HumanizerWorkspaceProps) {
-  const [sourceText, setSourceText] = useState(initialText);
-  const [linkedRecordId, setLinkedRecordId] = useState<string | undefined>(
-    initialRecordId
+  const [sourceText, setSourceText] = useState(initialText ?? '');
+  const [linkedRecordId, setLinkedRecordId] = useState<string>(
+    initialRecordId ?? ''
   );
   const [intensity, setIntensity] = useState<HumanizationIntensity>('moderate');
   const [loading, setLoading] = useState(false);
@@ -37,10 +37,10 @@ export function HumanizerWorkspace({
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (initialText) {
+    if (typeof initialText === 'string' && initialText.length > 0) {
       setSourceText(initialText);
     }
-    setLinkedRecordId(initialRecordId);
+    setLinkedRecordId(initialRecordId ?? '');
   }, [initialText, initialRecordId]);
 
   const runHumanize = async () => {
@@ -54,7 +54,7 @@ export function HumanizerWorkspace({
         body: JSON.stringify({
           text: sourceText,
           intensity,
-          recordId: linkedRecordId,
+          recordId: linkedRecordId || undefined,
         }),
       });
       const data = await res.json();
@@ -198,12 +198,12 @@ export function HumanizerWorkspace({
               {records.length > 0 && (
                 <select
                   aria-label="Load source text from detection history"
-                  value={linkedRecordId || ''}
+                  value={linkedRecordId ?? ''}
                   onChange={(e) => {
-                    const id = e.target.value || undefined;
+                    const id = e.target.value;
                     setLinkedRecordId(id);
                     const rec = records.find((r) => r.id === id);
-                    if (rec) setSourceText(rec.fullText);
+                    if (rec) setSourceText(rec.fullText ?? '');
                   }}
                   className="max-w-[230px] truncate text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-slate-700 dark:text-slate-200"
                 >
@@ -218,7 +218,7 @@ export function HumanizerWorkspace({
             </div>
             <textarea
               id="humanizer-source"
-              value={sourceText}
+              value={sourceText ?? ''}
               onChange={(e) => setSourceText(e.target.value)}
               rows={12}
               placeholder="Paste AI-flagged text here or load a previous detection record..."

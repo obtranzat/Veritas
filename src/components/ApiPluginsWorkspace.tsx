@@ -31,7 +31,7 @@ export function ApiPluginsWorkspace({
   const [mcpResponse, setMcpResponse] = useState<string>('');
   const [mcpBusy, setMcpBusy] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
-  const [newKeyRpm, setNewKeyRpm] = useState(240);
+  const [newKeyRpm, setNewKeyRpm] = useState('240');
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
 
@@ -39,7 +39,7 @@ export function ApiPluginsWorkspace({
   const [pluginName, setPluginName] = useState('');
   const [pluginDesc, setPluginDesc] = useState('');
   const [pluginPattern, setPluginPattern] = useState('');
-  const [pluginWeight, setPluginWeight] = useState(8);
+  const [pluginWeight, setPluginWeight] = useState('8');
   const [pluginRegex, setPluginRegex] = useState(false);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ export function ApiPluginsWorkspace({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: newKeyName || 'Self-Hosted API Client',
-        rateLimitRpm: newKeyRpm,
+        rateLimitRpm: Math.max(1, Math.min(10000, Number(newKeyRpm) || 240)),
       }),
     });
     const data = await res.json();
@@ -135,7 +135,7 @@ export function ApiPluginsWorkspace({
         name: pluginName.trim(),
         description: pluginDesc.trim() || 'Custom detection rule',
         category: 'Custom Rule',
-        weight: pluginWeight,
+        weight: Math.max(-25, Math.min(25, Number(pluginWeight) || 0)),
         pattern: pluginPattern.trim(),
         isRegex: pluginRegex,
       }),
@@ -232,7 +232,7 @@ export function ApiPluginsWorkspace({
                 min={1}
                 max={10000}
                 value={newKeyRpm}
-                onChange={(e) => setNewKeyRpm(Number(e.target.value))}
+                onChange={(e) => setNewKeyRpm(e.target.value)}
                 className="w-24 text-xs font-mono bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-2 text-slate-900 dark:text-slate-100"
                 title="Requests per minute"
               />
@@ -454,7 +454,7 @@ export function ApiPluginsWorkspace({
                 <label className="flex items-center gap-2 text-slate-700 dark:text-slate-300 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={pluginRegex}
+                    checked={Boolean(pluginRegex)}
                     onChange={(e) => setPluginRegex(e.target.checked)}
                   />
                   Evaluate as RegExp
@@ -469,7 +469,7 @@ export function ApiPluginsWorkspace({
                     min={-25}
                     max={25}
                     value={pluginWeight}
-                    onChange={(e) => setPluginWeight(Number(e.target.value))}
+                    onChange={(e) => setPluginWeight(e.target.value)}
                     className="w-16 font-mono bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-2 py-1 text-slate-900 dark:text-slate-100"
                   />
                 </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -78,6 +78,18 @@ export function ResilienceRouterWorkspace({
   onNotify,
 }: ResilienceRouterWorkspaceProps) {
   const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [creditFloorInput, setCreditFloorInput] = useState<string>(
+    String(telemetry?.policy?.preemptiveCreditSwitchUsd ?? 0.1)
+  );
+
+  useEffect(() => {
+    if (
+      typeof telemetry?.policy?.preemptiveCreditSwitchUsd === 'number' &&
+      Number.isFinite(telemetry.policy.preemptiveCreditSwitchUsd)
+    ) {
+      setCreditFloorInput(String(telemetry.policy.preemptiveCreditSwitchUsd));
+    }
+  }, [telemetry?.policy?.preemptiveCreditSwitchUsd]);
 
   if (!telemetry) {
     return (
@@ -300,7 +312,7 @@ export function ResilienceRouterWorkspace({
               Model Selection Strategy
             </span>
             <select
-              value={policy.strategy}
+              value={policy.strategy ?? 'local-first'}
               disabled={busyAction !== null}
               onChange={(e) =>
                 void updatePolicy({ strategy: e.target.value as RoutingStrategy }, 'strategy')
@@ -323,7 +335,7 @@ export function ResilienceRouterWorkspace({
               Preferred Local Open-Source Family
             </span>
             <select
-              value={policy.preferredLocalFamily}
+              value={policy.preferredLocalFamily ?? 'llama'}
               disabled={busyAction !== null}
               onChange={(e) =>
                 void updatePolicy(
@@ -353,14 +365,27 @@ export function ResilienceRouterWorkspace({
               min={0}
               max={50}
               step={0.05}
-              value={policy.preemptiveCreditSwitchUsd}
+              value={creditFloorInput}
               disabled={busyAction !== null}
-              onChange={(e) =>
-                void updatePolicy(
-                  { preemptiveCreditSwitchUsd: Number(e.target.value) },
-                  'credit switch threshold'
-                )
-              }
+              onChange={(e) => setCreditFloorInput(e.target.value)}
+              onBlur={() => {
+                const parsed = Number(creditFloorInput);
+                const normalized = Number.isFinite(parsed)
+                  ? Math.max(0, Math.min(50, parsed))
+                  : policy.preemptiveCreditSwitchUsd ?? 0.1;
+                setCreditFloorInput(String(normalized));
+                if (normalized !== policy.preemptiveCreditSwitchUsd) {
+                  void updatePolicy(
+                    { preemptiveCreditSwitchUsd: normalized },
+                    'credit switch threshold'
+                  );
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                }
+              }}
               className="w-full px-2.5 py-2 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-mono"
             />
             <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
@@ -380,7 +405,7 @@ export function ResilienceRouterWorkspace({
               </div>
               <input
                 type="checkbox"
-                checked={policy.offlineMode}
+                checked={Boolean(policy.offlineMode)}
                 disabled={busyAction !== null}
                 onChange={(e) =>
                   void updatePolicy({ offlineMode: e.target.checked }, 'offline mode')
@@ -400,7 +425,7 @@ export function ResilienceRouterWorkspace({
               </div>
               <input
                 type="checkbox"
-                checked={policy.enableResponseCache}
+                checked={Boolean(policy.enableResponseCache)}
                 disabled={busyAction !== null}
                 onChange={(e) =>
                   void updatePolicy({ enableResponseCache: e.target.checked }, 'response cache')
@@ -486,7 +511,7 @@ export function ResilienceRouterWorkspace({
                     <td className="py-3 px-4">
                       <select
                         aria-label={`Select active model for ${p.name}`}
-                        value={p.activeModel}
+                        value={p.activeModel ?? p.availableModels[0] ?? ''}
                         disabled={busyAction !== null}
                         onChange={(e) =>
                           void updateProvider(p.id, { activeModel: e.target.value }, 'model')

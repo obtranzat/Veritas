@@ -179,7 +179,7 @@ export function TeamSelfHostWorkspace({
 
               <select
                 aria-label={`Role for ${u.name}`}
-                value={u.role}
+                value={u.role || 'Reviewer'}
                 onChange={(e) => void updateRole(u, e.target.value as UserRole)}
                 className="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2.5 py-1.5 text-slate-800 dark:text-slate-200"
               >
@@ -224,7 +224,7 @@ export function TeamSelfHostWorkspace({
                 </label>
                 <select
                   id="privacy-egress-mode"
-                  value={privacyConfig.mode}
+                  value={privacyConfig.mode || 'hybrid-airlock'}
                   onChange={(e) =>
                     void updatePrivacy({
                       mode: e.target.value as PrivacyRuntimeConfig['mode'],
@@ -247,7 +247,7 @@ export function TeamSelfHostWorkspace({
                 </span>
                 <input
                   type="checkbox"
-                  checked={privacyConfig.scrubPiiBeforeExternal}
+                  checked={Boolean(privacyConfig.scrubPiiBeforeExternal)}
                   onChange={(e) =>
                     void updatePrivacy({ scrubPiiBeforeExternal: e.target.checked })
                   }
@@ -260,7 +260,7 @@ export function TeamSelfHostWorkspace({
                 </span>
                 <input
                   type="checkbox"
-                  checked={privacyConfig.storeRawText}
+                  checked={Boolean(privacyConfig.storeRawText)}
                   onChange={(e) =>
                     void updatePrivacy({ storeRawText: e.target.checked })
                   }

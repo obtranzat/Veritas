@@ -43,9 +43,9 @@ export function SeoQualityWorkspace({
     setSelectedRecordId(id);
     const rec = records.find((r) => r.id === id);
     if (rec) {
-      setTitle(rec.title);
-      setText(rec.fullText);
-      setTargetKeyword(rec.seoAnalysis?.targetKeyword || '');
+      setTitle(rec.title ?? '');
+      setText(rec.fullText ?? '');
+      setTargetKeyword(rec.seoAnalysis?.targetKeyword ?? '');
       setSeoReport(rec.seoAnalysis || null);
       setGeoReport(rec.geoAnalysis || null);
       setActiveRecord(rec);
