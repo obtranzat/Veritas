@@ -262,6 +262,7 @@ export interface DetectionRecord {
   comments: CollaborationComment[];
   assignedToUserId?: string;
   createdByUserId: string;
+  routingMeta?: RoutingExecutionMeta;
 }
 
 export interface AdversarialSecurityReport {
@@ -352,6 +353,7 @@ export interface CodeAnalysisReport {
   llmIdiomFindings: string[];
   securityNotes: string[];
   summary: string;
+  routingMeta?: RoutingExecutionMeta;
 }
 
 export interface AuthorStylometricVector {
@@ -505,4 +507,160 @@ export interface AnalyticsSummary {
     scans: number;
     avgAiScore: number;
   }[];
+}
+
+export type AiProviderId =
+  | 'local-oss'
+  | 'ollama'
+  | 'vllm'
+  | 'lmstudio'
+  | 'openrouter'
+  | 'gemini'
+  | 'openai'
+  | 'anthropic'
+  | 'groq'
+  | 'together'
+  | 'custom';
+
+export type LocalModelFamily = 'llama' | 'qwen' | 'deepseek' | 'mistral' | 'gemma';
+
+export type RoutingStrategy = 'local-first' | 'cheapest' | 'fastest' | 'highest-quality';
+
+export type ProviderFailureReason =
+  | 'PAYMENT_REQUIRED_402'
+  | 'RESOURCE_EXHAUSTED'
+  | 'QUOTA_EXCEEDED'
+  | 'RATE_LIMIT_EXCEEDED'
+  | 'BILLING_DISABLED'
+  | 'INSUFFICIENT_CREDITS'
+  | 'TRANSIENT_ERROR'
+  | 'OFFLINE'
+  | 'UNCONFIGURED';
+
+export type ProviderHealthStatus =
+  | 'healthy'
+  | 'degraded'
+  | 'cooldown'
+  | 'exhausted'
+  | 'offline'
+  | 'unconfigured';
+
+export interface AiProviderState {
+  id: AiProviderId;
+  name: string;
+  priority: number; // 1..11 exact hierarchy
+  isLocal: boolean;
+  enabled: boolean;
+  configured: boolean;
+  health: ProviderHealthStatus;
+  statusReason?: string;
+  endpoint?: string;
+  activeModel: string;
+  availableModels: string[];
+  supportedModelFamilies: LocalModelFamily[];
+  costPer1kTokensUsd: number;
+  avgLatencyMs: number;
+  qualityScore: number; // 1..100
+  creditBalanceUsd: number;
+  creditLimitUsd: number;
+  preExhaustionThresholdUsd: number;
+  warningThresholdPercent: number;
+  requestsServed: number;
+  cacheHitsServed: number;
+  failureCount: number;
+  consecutiveFailures: number;
+  cooldownUntil?: string;
+  lastSuccessAt?: string;
+  lastErrorAt?: string;
+  lastErrorCode?: ProviderFailureReason;
+  lastErrorMessage?: string;
+}
+
+export interface FailoverEvent {
+  id: string;
+  timestamp: string;
+  task: string;
+  fromProvider: AiProviderId;
+  toProvider: AiProviderId;
+  reason: ProviderFailureReason | 'PREEMPTIVE_CREDIT_SWITCH';
+  errorDetail: string;
+  latencyMs: number;
+  fallbackUsed: boolean;
+}
+
+export interface AdminNotification {
+  id: string;
+  timestamp: string;
+  severity: 'info' | 'warning' | 'critical';
+  code: string;
+  providerId?: AiProviderId;
+  title: string;
+  message: string;
+  acknowledged: boolean;
+}
+
+export type DeferredTaskType =
+  | 'text-detect'
+  | 'humanize'
+  | 'fact-check'
+  | 'plagiarism-web'
+  | 'plagiarism-crosslingual'
+  | 'citation-entailment'
+  | 'citation-lookup'
+  | 'code-forensics';
+
+export interface DeferredCloudJob {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  task: DeferredTaskType;
+  recordId?: string;
+  payloadSummary: string;
+  inputText: string;
+  extraParams?: Record<string, string>;
+  status: 'queued' | 'retrying' | 'completed' | 'failed';
+  attempts: number;
+  lastError?: string;
+  completedAt?: string;
+  resultSummary?: string;
+}
+
+export interface RoutingExecutionMeta {
+  providerUsed: AiProviderId;
+  modelUsed: string;
+  strategyApplied: RoutingStrategy;
+  latencyMs: number;
+  cacheHit: boolean;
+  failoverCount: number;
+  estimatedCostUsd: number;
+  degradedOfflineFallback: boolean;
+  deferredJobId?: string;
+  attemptedProviders: AiProviderId[];
+}
+
+export interface AiRoutingPolicyConfig {
+  strategy: RoutingStrategy;
+  offlineMode: boolean;
+  enableResponseCache: boolean;
+  cacheTtlSeconds: number;
+  preferredLocalFamily: LocalModelFamily;
+  preemptiveCreditSwitchUsd: number;
+  retryMaxAttempts: number;
+}
+
+export interface AiCacheStats {
+  entries: number;
+  hits: number;
+  misses: number;
+  estimatedTokensSaved: number;
+  estimatedCostSavedUsd: number;
+}
+
+export interface AiRoutingTelemetry {
+  policy: AiRoutingPolicyConfig;
+  providers: AiProviderState[];
+  failoverHistory: FailoverEvent[];
+  adminAlerts: AdminNotification[];
+  deferredQueue: DeferredCloudJob[];
+  cacheStats: AiCacheStats;
 }

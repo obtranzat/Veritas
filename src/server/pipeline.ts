@@ -23,18 +23,8 @@ import {
   normalizeAstTokenStream,
   scanSpdxLicenseRisks,
 } from './codeAnalysis.ts';
-import {
-  analyzeTextWithGemini,
-  checkCrossLingualPlagiarismWithGemini,
-  checkWebPlagiarismWithGemini,
-  factCheckAndVerifySourcesWithGemini,
-  humanizeTextWithGemini,
-  inspectCodeWithGemini,
-  inspectImageWithGemini,
-  inspectVideoWithGemini,
-  transcribeAudioWithGemini,
-  verifyCitationEntailmentWithGemini,
-} from './gemini.ts';
+import { aiRouter } from './aiRouter.ts';
+import type { GeminiDetectionResult } from './gemini.ts';
 import {
   crawlWebPages,
   extractDocumentText,
@@ -125,39 +115,27 @@ export async function runDetectionPipeline(
   const pluginDelta = pluginFindings.reduce((acc, f) => acc + f.scoreDelta, 0);
 
   const privacy = store.getPrivacyConfig();
-  const burstFactor = writingQuality.burstiness < 22 ? 68 : writingQuality.burstiness < 34 ? 46 : 22;
-  const paraphrasePreview = detectParaphraseSpin(effectiveText, writingQuality, burstFactor);
-  let geminiResult: Awaited<ReturnType<typeof analyzeTextWithGemini>>;
+  let geminiResult: GeminiDetectionResult;
+  let routingMeta: DetectionRecord['routingMeta'];
   if (privacy.mode === 'local-only') {
-    const localAi = clamp(
-      Math.round(burstFactor * 0.55 + paraphrasePreview.spinProbability * 0.45 + pluginDelta),
-      5,
-      95
-    );
-    geminiResult = {
-      overallAiProbability: localAi,
-      confidence: 82,
-      suspectedModelFamily:
-        localAi >= 65
-          ? 'Local Stylometric Heuristic Profile'
-          : 'Human / Unverified (Local-Only)',
-      summary:
-        'Strict Local-Only mode active (zero external egress): evaluated exclusively via on-node stylometric variance, paraphrase indicators, and active rules.',
-      detectedLanguage: langGuess.language,
-      sentenceScores: split.map((s) => {
-        const wc = s.text.split(/\s+/).filter(Boolean).length;
-        return {
-          index: s.id,
-          aiProbability: clamp(localAi + (wc > 18 && wc < 28 ? 8 : -6), 5, 95),
-          reason: 'Evaluated locally via sentence cadence and lexical density heuristics.',
-        };
-      }),
-    };
+    const routedLocal = await aiRouter.executeTextDetection({
+      text: effectiveText,
+      sentences: split,
+      allowCloud: false,
+    });
+    geminiResult = routedLocal.value;
+    routingMeta = routedLocal.meta;
   } else {
     const textForModel = privacy.scrubPiiBeforeExternal
       ? redactPiiForExternalAirlock(effectiveText).redactedText
       : effectiveText;
-    geminiResult = await analyzeTextWithGemini(textForModel, split);
+    const routed = await aiRouter.executeTextDetection({
+      text: textForModel,
+      sentences: split,
+      allowCloud: true,
+    });
+    geminiResult = routed.value;
+    routingMeta = routed.meta;
   }
 
   const mergedSentences = mergeSentencesWithModelScores(
@@ -274,6 +252,7 @@ export async function runDetectionPipeline(
     humanizedVersions: [],
     comments: [],
     createdByUserId: 'usr-elena',
+    routingMeta,
   };
 
   if (input.saveToHistory !== false) {
@@ -301,7 +280,10 @@ export async function runFactCheckPipeline(
   const outboundText = privacy.scrubPiiBeforeExternal
     ? redactPiiForExternalAirlock(text).redactedText
     : text;
-  const factCheck = await factCheckAndVerifySourcesWithGemini(outboundText);
+  const { value: factCheck } = await aiRouter.executeFactCheck({
+    text: outboundText,
+    recordId,
+  });
   let updatedRecord: DetectionRecord | undefined;
 
   if (recordId) {
@@ -347,7 +329,8 @@ export async function runWebPlagiarismPipeline(
   const outboundText = privacy.scrubPiiBeforeExternal
     ? redactPiiForExternalAirlock(text).redactedText
     : text;
-  const { webMatches } = await checkWebPlagiarismWithGemini(outboundText);
+  const { value: webPlagRes } = await aiRouter.executeWebPlagiarism({ text: outboundText });
+  const { webMatches } = webPlagRes;
   let updatedRecord: DetectionRecord | undefined;
 
   if (recordId) {
@@ -429,7 +412,7 @@ export async function runCrossLingualPlagiarismPipeline(
   const outboundText = privacy.scrubPiiBeforeExternal
     ? redactPiiForExternalAirlock(text).redactedText
     : text;
-  const matches = await checkCrossLingualPlagiarismWithGemini(outboundText);
+  const { value: matches } = await aiRouter.executeCrossLingualPlagiarism({ text: outboundText });
   let updatedRecord: DetectionRecord | undefined;
   if (recordId) {
     updatedRecord = store.updateRecord(recordId, (rec) => ({
@@ -456,7 +439,10 @@ export async function runCitationEntailmentPipeline(
   if (privacy.mode === 'local-only') {
     throw new Error('External citation entailment lookup is disabled in Air-Gapped Local-Only mode.');
   }
-  const result = await verifyCitationEntailmentWithGemini(claim, safeUrl);
+  const { value: result } = await aiRouter.executeCitationEntailment({
+    claim,
+    citationUrl: safeUrl,
+  });
   store.addAuditLog({
     actorName: 'Dr. Elena Rostova',
     actorRole: 'Admin',
@@ -485,32 +471,16 @@ export async function runCodeAnalysisPipeline(
   const codeOverlapMatches = compareCodeCorpusOverlap(tokens, store.getCodeEntries());
 
   const privacy = store.getPrivacyConfig();
-  let geminiCode;
-  if (privacy.mode === 'local-only') {
-    const localCodeScore = clamp(
-      28 + deterministicIdioms.length * 14 + (cyclomaticComplexity <= 4 ? 12 : 0),
-      10,
-      92
-    );
-    geminiCode = {
-      aiCodeProbability: localCodeScore,
-      confidence: 80,
-      suspectedAssistant:
-        localCodeScore >= 60 ? 'Local AST & Idiom Signal' : 'Human Engineered (Local-Only)',
-      llmIdiomFindings: deterministicIdioms,
-      securityNotes:
-        spdxLicenseRisks.length > 0
-          ? [`Detected ${spdxLicenseRisks.length} SPDX license notice(s) requiring review.`]
-          : ['No unsafe patterns flagged by local deterministic check.'],
-      summary:
-        'Strict Local-Only mode active (zero external egress): evaluated using variable-rename-invariant AST fingerprinting, McCabe cyclomatic complexity, SPDX license scanner, and deterministic coding idiom checks.',
-    };
-  } else {
-    const outboundCode = privacy.scrubPiiBeforeExternal
+  const outboundCode =
+    privacy.mode !== 'local-only' && privacy.scrubPiiBeforeExternal
       ? redactPiiForExternalAirlock(cleanCode).redactedText
       : cleanCode;
-    geminiCode = await inspectCodeWithGemini(outboundCode, detectedLang);
-  }
+  const routedCode = await aiRouter.executeCodeForensics({
+    code: outboundCode,
+    language: detectedLang,
+    allowCloud: privacy.mode !== 'local-only',
+  });
+  const geminiCode = routedCode.value;
 
   const aiProb = round1(clamp(geminiCode.aiCodeProbability, 1, 99));
   const report: CodeAnalysisReport = {
@@ -533,6 +503,7 @@ export async function runCodeAnalysisPipeline(
     ).slice(0, 8),
     securityNotes: geminiCode.securityNotes || [],
     summary: geminiCode.summary,
+    routingMeta: routedCode.meta,
   };
 
   store.addCodeReport(report, tokens);
@@ -563,9 +534,16 @@ export async function runMediaPipeline(
   const isVideo =
     mimeType.startsWith('video/') || /\.(mp4|webm|mov|mkv|avi)$/i.test(lowerName);
 
+  const allowCloudMedia = store.getPrivacyConfig().mode !== 'local-only';
+
   if (isImage) {
     const binaryMeta = inspectImageBinaryMetadata(buffer, mimeType, fileName);
-    const geminiImg = await inspectImageWithGemini(buffer, mimeType || 'image/png');
+    const { value: geminiImg } = await aiRouter.executeImageForensics({
+      buffer,
+      mimeType: mimeType || 'image/png',
+      fileName,
+      allowCloud: allowCloudMedia,
+    });
 
     const combinedSynthetic = round1(
       clamp(
@@ -613,15 +591,21 @@ export async function runMediaPipeline(
   }
 
   if (isAudio) {
-    const transcript = await transcribeAudioWithGemini(
+    const { value: transcript } = await aiRouter.executeAudioTranscription({
       buffer,
-      mimeType || 'audio/mpeg'
-    );
+      mimeType: mimeType || 'audio/mpeg',
+      fileName,
+      allowCloud: allowCloudMedia,
+    });
     const effectiveTranscript =
       transcript || 'No intelligible speech detected in uploaded audio file.';
 
     const split = splitSentencesWithOffsets(effectiveTranscript);
-    const geminiText = await analyzeTextWithGemini(effectiveTranscript, split);
+    const { value: geminiText } = await aiRouter.executeTextDetection({
+      text: effectiveTranscript,
+      sentences: split,
+      allowCloud: allowCloudMedia,
+    });
 
     const mediaForensics: MediaForensics = {
       mediaType: 'audio',
@@ -629,7 +613,7 @@ export async function runMediaPipeline(
       fileSizeBytes: buffer.length,
       metadataTags: {
         'MIME Type': mimeType,
-        'Transcription Engine': 'Gemini 3.5 Transcribe',
+        'Transcription Engine': 'Veritas Resilient ASR Router',
         'Audio Size': `${(buffer.length / 1024).toFixed(1)} KB`,
       },
       generativeSignatures: [],
@@ -661,10 +645,12 @@ export async function runMediaPipeline(
   }
 
   if (isVideo) {
-    const geminiVideo = await inspectVideoWithGemini(
+    const { value: geminiVideo } = await aiRouter.executeVideoForensics({
       buffer,
-      mimeType || 'video/mp4'
-    );
+      mimeType: mimeType || 'video/mp4',
+      fileName,
+      allowCloud: allowCloudMedia,
+    });
 
     const mediaForensics: MediaForensics = {
       mediaType: 'video',
@@ -741,7 +727,12 @@ export async function runHumanizationPipeline(
     originalAiScore = preCheck.aiProbability;
   }
 
-  const rewritten = await humanizeTextWithGemini(cleaned, intensity);
+  const privacy = store.getPrivacyConfig();
+  const { value: rewritten } = await aiRouter.executeHumanize({
+    text: cleaned,
+    intensity,
+    allowCloud: privacy.mode !== 'local-only',
+  });
 
   const recheck = await runDetectionPipeline({
     text: rewritten.humanizedText,

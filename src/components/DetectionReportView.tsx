@@ -250,6 +250,37 @@ export function DetectionReportView({
             <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 truncate">
               {record.title}
             </h2>
+            {record.routingMeta && (
+              <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400 pt-0.5">
+                <span>
+                  Engine: <strong className="text-slate-700 dark:text-slate-300">{record.routingMeta.providerUsed}</strong> ({record.routingMeta.modelUsed})
+                </span>
+                <span aria-hidden="true">·</span>
+                <span>Strategy: {record.routingMeta.strategyApplied}</span>
+                {record.routingMeta.cacheHit && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="text-emerald-700 dark:text-emerald-400">Cache Hit ($0.00)</span>
+                  </>
+                )}
+                {record.routingMeta.failoverCount > 0 && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="text-amber-700 dark:text-amber-400">
+                      Auto-Failover ({record.routingMeta.failoverCount})
+                    </span>
+                  </>
+                )}
+                {record.routingMeta.deferredJobId && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="text-blue-700 dark:text-blue-400">
+                      Cloud Replay Queued ({record.routingMeta.deferredJobId})
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">

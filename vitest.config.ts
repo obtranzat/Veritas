@@ -14,6 +14,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json-summary', 'lcov'],
       include: [
+        'src/server/aiRouter.ts',
         'src/server/app.ts',
         'src/server/codeAnalysis.ts',
         'src/server/openapi.ts',

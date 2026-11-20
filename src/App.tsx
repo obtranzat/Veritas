@@ -1,5 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Activity,
+  AlertTriangle,
   BarChart3,
   BookOpen,
   CheckCircle2,
@@ -85,7 +87,13 @@ const TeamSelfHostWorkspace = lazy(() =>
     default: m.TeamSelfHostWorkspace,
   }))
 );
+const ResilienceRouterWorkspace = lazy(() =>
+  import('./components/ResilienceRouterWorkspace.tsx').then((m) => ({
+    default: m.ResilienceRouterWorkspace,
+  }))
+);
 import type {
+  AiRoutingTelemetry,
   AnalyticsSummary,
   ApiKeyRecord,
   AuditLogEntry,
@@ -113,6 +121,7 @@ type WorkspaceTab =
   | 'humanizer'
   | 'history'
   | 'api'
+  | 'resilience'
   | 'team';
 
 interface NavItem {
@@ -154,6 +163,7 @@ const NAV_SECTIONS: { heading: string; items: NavItem[] }[] = [
     items: [
       { id: 'history', label: 'History & Audit', breadcrumb: 'Analytics, History & Audit', keywords: 'analytics export csv audit log delete', icon: BarChart3 },
       { id: 'api', label: 'API, MCP & LTI', breadcrumb: 'REST API, Plugins, MCP & LTI 1.3', keywords: 'openapi swagger bearer key plugin mcp canvas moodle', icon: KeyRound },
+      { id: 'resilience', label: 'AI Failover & Local', breadcrumb: 'Resilient Multi-Provider & Local OSS Router', keywords: 'failover ollama vllm lmstudio openrouter llama qwen deepseek credit quota offline', icon: Activity },
       { id: 'team', label: 'Privacy & Team', breadcrumb: 'Privacy Airlock, RBAC & Docker Stack', keywords: 'local-only airlock rbac docker self-host team', icon: Users },
     ],
   },
@@ -182,6 +192,7 @@ export default function App() {
   const [authorProfiles, setAuthorProfiles] = useState<AuthorStylometricProfile[]>([]);
   const [proofs, setProofs] = useState<VeritasProofBundle[]>([]);
   const [privacyConfig, setPrivacyConfig] = useState<PrivacyRuntimeConfig | null>(null);
+  const [routingTelemetry, setRoutingTelemetry] = useState<AiRoutingTelemetry | null>(null);
 
   const [humanizerSeedText, setHumanizerSeedText] = useState('');
   const [humanizerRecordId, setHumanizerRecordId] = useState<string | undefined>(undefined);
@@ -254,9 +265,10 @@ export default function App() {
         fetch('/api/v1/authorship/profiles'),
         fetch('/api/v1/proofs'),
         fetch('/api/v1/privacy-config'),
+        fetch('/api/v1/ai-routing/status'),
       ]);
 
-      const [hData, aData, jData, kData, pData, uData, lData, cData, crData, apData, prData, pcData] =
+      const [hData, aData, jData, kData, pData, uData, lData, cData, crData, apData, prData, pcData, rtData] =
         await Promise.all(responses.map((r) => r.json()));
 
       const nextRecords = Array.isArray(hData) ? (hData as DetectionRecord[]) : [];
@@ -277,6 +289,9 @@ export default function App() {
       setAuthorProfiles(Array.isArray(apData) ? (apData as AuthorStylometricProfile[]) : []);
       setProofs(Array.isArray(prData) ? (prData as VeritasProofBundle[]) : []);
       setPrivacyConfig(pcData as PrivacyRuntimeConfig);
+      if (rtData && Array.isArray((rtData as AiRoutingTelemetry).providers)) {
+        setRoutingTelemetry(rtData as AiRoutingTelemetry);
+      }
     } catch (err) {
       setLoadError(
         err instanceof Error
@@ -535,6 +550,18 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {routingTelemetry && routingTelemetry.adminAlerts.some((a) => !a.acknowledged) && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('resilience')}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-xs font-medium text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer whitespace-nowrap"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>
+                  {routingTelemetry.adminAlerts.filter((a) => !a.acknowledged).length} Failover Alert
+                </span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
@@ -720,6 +747,14 @@ export default function App() {
                     <ApiPluginsWorkspace
                       apiKeys={apiKeys}
                       plugins={plugins}
+                      onRefresh={refreshAll}
+                      onNotify={notify}
+                    />
+                  )}
+
+                  {activeTab === 'resilience' && (
+                    <ResilienceRouterWorkspace
+                      telemetry={routingTelemetry}
                       onRefresh={refreshAll}
                       onNotify={notify}
                     />

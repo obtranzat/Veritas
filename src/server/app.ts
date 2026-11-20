@@ -4,6 +4,7 @@ import JSZip from 'jszip';
 import multer from 'multer';
 import crypto from 'node:crypto';
 import type {
+  AiProviderId,
   AuthorStylometricProfile,
   CitationEntry,
   DetectionRecord,
@@ -14,7 +15,7 @@ import type {
   UserRole,
   VeritasProofBundle,
 } from '../types/veritas.ts';
-import { lookupCitationWithGemini } from './gemini.ts';
+import { aiRouter } from './aiRouter.ts';
 import { buildOpenApiSpec } from './openapi.ts';
 import {
   enqueueBatchFilesJob,
@@ -313,6 +314,7 @@ export function createVeritasApp(options: CreateVeritasAppOptions = {}): express
 
     const isAdminOnlyMutation =
       req.path.startsWith('/plugins') ||
+      req.path.startsWith('/ai-routing') ||
       (req.path === '/privacy-config' && req.method === 'PUT') ||
       (req.path.startsWith('/history/') && req.method === 'DELETE');
 
@@ -890,8 +892,8 @@ export function createVeritasApp(options: CreateVeritasAppOptions = {}): express
       if (typeof query !== 'string' || !query.trim()) {
         return res.status(400).json({ error: 'Provide a paper title, DOI, or URL to verify.' });
       }
-      const metadata = await lookupCitationWithGemini(query.trim());
-      res.json(metadata);
+      const { value, meta } = await aiRouter.executeCitationLookup({ query: query.trim() });
+      res.json({ ...value, routingMeta: meta });
     } catch (err: unknown) {
       res.status(500).json({
         error: err instanceof Error ? err.message : 'Citation lookup failed.',
@@ -1371,6 +1373,88 @@ export function createVeritasApp(options: CreateVeritasAppOptions = {}): express
 
   app.get('/api/v1/audit-logs', (_req, res) => {
     res.json(store.getAuditLogs());
+  });
+
+  // 14. Resilient Multi-Provider AI Failover, Local-First & Credit Monitoring Router
+  const VALID_PROVIDER_IDS: AiProviderId[] = [
+    'local-oss',
+    'ollama',
+    'vllm',
+    'lmstudio',
+    'openrouter',
+    'gemini',
+    'openai',
+    'anthropic',
+    'groq',
+    'together',
+    'custom',
+  ];
+
+  app.get('/api/v1/ai-routing/status', (_req, res) => {
+    res.json(aiRouter.getTelemetry());
+  });
+
+  app.put('/api/v1/ai-routing/policy', (req, res) => {
+    const clean = stripPrototypePollutionKeys<Record<string, unknown>>(req.body);
+    const updated = aiRouter.updatePolicy(clean);
+    store.addAuditLog({
+      actorName: 'Dr. Elena Rostova',
+      actorRole: 'Admin',
+      action: 'AI_ROUTING_POLICY_UPDATED',
+      target: 'Resilient AI Router',
+      detail: `Strategy: ${updated.strategy} · Local Family: ${updated.preferredLocalFamily} · Offline: ${updated.offlineMode} · Cache: ${updated.enableResponseCache}`,
+    });
+    res.json(updated);
+  });
+
+  app.patch('/api/v1/ai-routing/providers/:id', (req, res) => {
+    const providerId = req.params.id as AiProviderId;
+    if (!VALID_PROVIDER_IDS.includes(providerId)) {
+      return res.status(404).json({ error: `Unknown AI provider "${req.params.id}".` });
+    }
+    const clean = stripPrototypePollutionKeys<Record<string, unknown>>(req.body);
+    const updated = aiRouter.updateProvider(providerId, clean);
+    if (!updated) {
+      return res.status(404).json({ error: `Provider "${req.params.id}" not found.` });
+    }
+    store.addAuditLog({
+      actorName: 'Dr. Elena Rostova',
+      actorRole: 'Admin',
+      action: 'AI_PROVIDER_UPDATED',
+      target: updated.name,
+      detail: `Enabled: ${updated.enabled} · Health: ${updated.health} · Model: ${updated.activeModel} · Balance: $${updated.creditBalanceUsd}`,
+    });
+    res.json(updated);
+  });
+
+  app.post('/api/v1/ai-routing/probe', async (_req, res) => {
+    const providers = await aiRouter.probeProviders();
+    res.json({ providers, checkedAt: new Date().toISOString() });
+  });
+
+  app.post('/api/v1/ai-routing/alerts/ack', (req, res) => {
+    const { id } = (req.body || {}) as { id?: string };
+    const acknowledgedCount = aiRouter.acknowledgeAlert(
+      typeof id === 'string' && id.trim() ? id.trim() : 'all'
+    );
+    res.json({ acknowledgedCount });
+  });
+
+  app.post('/api/v1/ai-routing/queue/process', async (_req, res) => {
+    const result = await aiRouter.replayDeferredQueue();
+    res.json(result);
+  });
+
+  app.delete('/api/v1/ai-routing/cache', (_req, res) => {
+    aiRouter.clearCache();
+    store.addAuditLog({
+      actorName: 'Dr. Elena Rostova',
+      actorRole: 'Admin',
+      action: 'AI_RESPONSE_CACHE_CLEARED',
+      target: 'Resilient AI Router',
+      detail: 'Cleared SHA-256 inference cache.',
+    });
+    res.json({ cleared: true });
   });
 
   // Global error handler — prevents stack trace leakage on malformed JSON, Multer limit breaches, etc.

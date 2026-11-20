@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { aiRouter } from '../../src/server/aiRouter.ts';
 import { createVeritasApp } from '../../src/server/app.ts';
 import * as geminiModule from '../../src/server/gemini.ts';
 import { runMediaPipeline, runUrlCrawlPipeline } from '../../src/server/pipeline.ts';
@@ -315,6 +316,14 @@ describe('Veritas Full API, Integration, Smoke & Acceptance Suite', () => {
 
   it('exercises mocked Gemini external pipelines: media image/audio/video, URL crawl, humanize, fact-check, web/cross-lingual plagiarism, citation entailment & lookup', async () => {
     store.updatePrivacyConfig({ mode: 'hybrid-airlock', scrubPiiBeforeExternal: true, storeRawText: true });
+    aiRouter.resetForTesting();
+    aiRouter.updateProvider('gemini', {
+      enabled: true,
+      configured: true,
+      health: 'healthy',
+      creditBalanceUsd: 50,
+    });
+    aiRouter.updatePolicy({ strategy: 'local-first', enableResponseCache: false });
 
     vi.spyOn(geminiModule, 'analyzeTextWithGemini').mockResolvedValue({
       overallAiProbability: 24,
@@ -571,13 +580,18 @@ describe('Veritas Full API, Integration, Smoke & Acceptance Suite', () => {
     const adHocSeo = await request(app).post('/api/v1/seo-analyze').send({ text: 'Telemetry systems monitor latency in distributed servers.', targetKeyword: 'telemetry' }).expect(200);
     expect(adHocSeo.body.seoAnalysis.targetKeyword).toBe('telemetry');
 
-    // Gemini error propagates safely as 500 JSON without crashing, then Python local analysis returns 200
-    vi.spyOn(geminiModule, 'inspectCodeWithGemini').mockRejectedValueOnce(new Error('Gemini offline'));
-    const errCode = await request(app)
+    // Gemini 402/RESOURCE_EXHAUSTED failure automatically fails over to local-oss (200 OK, zero downtime)
+    aiRouter.clearCache();
+    aiRouter.updateProvider('gemini', { enabled: true, configured: true, health: 'healthy', creditBalanceUsd: 50 });
+    vi.spyOn(geminiModule, 'inspectCodeWithGemini').mockRejectedValueOnce(
+      Object.assign(new Error('402 Payment Required: RESOURCE_EXHAUSTED'), { status: 402 })
+    );
+    const failoverCode = await request(app)
       .post('/api/v1/analyze-code')
       .send({ title: 'Python Worker', language: 'Python', code: 'def worker(x):\n    return x * 2\n' })
-      .expect(500);
-    expect(errCode.body.error).toContain('Gemini offline');
+      .expect(200);
+    expect(failoverCode.body.routingMeta.providerUsed).toBe('local-oss');
+    expect(failoverCode.body.routingMeta.failoverCount).toBeGreaterThanOrEqual(1);
 
     await request(app).put('/api/v1/privacy-config').send({ mode: 'local-only', scrubPiiBeforeExternal: true, storeRawText: true }).expect(200);
     const localCode = await request(app)
@@ -586,8 +600,55 @@ describe('Veritas Full API, Integration, Smoke & Acceptance Suite', () => {
       .expect(200);
     expect(localCode.body.astFingerprint).toHaveLength(16);
 
+    // Resilient AI Routing API endpoints + RBAC enforcement
+    const rtStatus = await request(app).get('/api/v1/ai-routing/status').expect(200);
+    expect(rtStatus.body.providers).toHaveLength(11);
+    expect(rtStatus.body.adminAlerts.length).toBeGreaterThanOrEqual(1);
+
+    const polRes = await request(app)
+      .put('/api/v1/ai-routing/policy')
+      .send({ strategy: 'cheapest', preferredLocalFamily: 'qwen', offlineMode: true })
+      .expect(200);
+    expect(polRes.body.strategy).toBe('cheapest');
+    expect(polRes.body.preferredLocalFamily).toBe('qwen');
+    expect(polRes.body.offlineMode).toBe(true);
+
+    // Offline fact-check returns degraded fallback + queues deferred cloud job, then replay runs
+    await request(app).put('/api/v1/privacy-config').send({ mode: 'hybrid-airlock', scrubPiiBeforeExternal: true, storeRawText: true }).expect(200);
+    const offlineFc = await request(app)
+      .post('/api/v1/fact-check')
+      .send({ text: 'The speed of light in vacuum is roughly 299792458 meters per second.' })
+      .expect(200);
+    expect(offlineFc.body.factCheck.summary).toContain('offline');
+
+    const provPatch = await request(app)
+      .patch('/api/v1/ai-routing/providers/gemini')
+      .send({ health: 'healthy', creditBalanceUsd: 25 })
+      .expect(200);
+    expect(provPatch.body.health).toBe('healthy');
+    await request(app).patch('/api/v1/ai-routing/providers/nonexistent').send({ enabled: true }).expect(404);
+
+    await request(app).put('/api/v1/ai-routing/policy').send({ offlineMode: false, strategy: 'local-first' }).expect(200);
+    const probeRes = await request(app).post('/api/v1/ai-routing/probe').expect(200);
+    expect(probeRes.body.providers).toHaveLength(11);
+
+    const replayRes = await request(app).post('/api/v1/ai-routing/queue/process').expect(200);
+    expect(replayRes.body.processed).toBeGreaterThanOrEqual(1);
+
+    const ackRes = await request(app).post('/api/v1/ai-routing/alerts/ack').send({ id: 'all' }).expect(200);
+    expect(typeof ackRes.body.acknowledgedCount).toBe('number');
+    await request(app).delete('/api/v1/ai-routing/cache').expect(200);
+
     // Admin strictAuth key deleting a temporary detection record & Multer limit handler check
     const adminKey = store.createApiKey('Strict Admin', 100, 'Admin');
+    const revKey2 = store.createApiKey('Strict Reviewer Routing', 100, 'Reviewer');
+    await request(strictApp)
+      .put('/api/v1/ai-routing/policy')
+      .set('Authorization', `Bearer ${revKey2.rawKey}`)
+      .send({ strategy: 'fastest' })
+      .expect(403);
+    store.deleteApiKey(revKey2.record.id);
+
     const tmpDet = await request(strictApp)
       .post('/api/v1/detect')
       .set('Authorization', `Bearer ${adminKey.rawKey}`)
@@ -609,5 +670,6 @@ describe('Veritas Full API, Integration, Smoke & Acceptance Suite', () => {
     await request(app).get('/api/v1/analytics').expect(200);
     await request(app).get('/api/v1/audit-logs').expect(200);
     await request(app).put('/api/v1/privacy-config').send(prev.body).expect(200);
+    aiRouter.resetForTesting();
   });
 });

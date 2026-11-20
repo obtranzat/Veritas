@@ -127,6 +127,27 @@ export function buildOpenApiSpec(baseUrl: string) {
       '/api/v1/analytics': {
         get: { summary: 'Aggregate platform authenticity, quality, SEO, and AI detection analytics', responses: { '200': { description: 'AnalyticsSummary' } } },
       },
+      '/api/v1/ai-routing/status': {
+        get: { summary: 'Get 11-tier AI provider hierarchy health, credit balances, failover history, admin alerts, offline queue, and cache telemetry', responses: { '200': { description: 'AiRoutingTelemetry' } } },
+      },
+      '/api/v1/ai-routing/policy': {
+        put: { summary: 'Update routing strategy (local-first/cheapest/fastest/highest-quality), offline mode, preferred local family, or cache policy', responses: { '200': { description: 'AiRoutingPolicyConfig' } } },
+      },
+      '/api/v1/ai-routing/providers/{id}': {
+        patch: { summary: 'Toggle provider state, reset cooldown, adjust credit budget guardrails, or select active model', responses: { '200': { description: 'AiProviderState' } } },
+      },
+      '/api/v1/ai-routing/probe': {
+        post: { summary: 'Actively probe configured local inference servers (Ollama, vLLM, LM Studio) and cloud credit thresholds', responses: { '200': { description: 'Updated provider health list' } } },
+      },
+      '/api/v1/ai-routing/alerts/ack': {
+        post: { summary: 'Acknowledge one or all administrator failover and credit exhaustion alerts', responses: { '200': { description: 'Acknowledged alert count' } } },
+      },
+      '/api/v1/ai-routing/queue/process': {
+        post: { summary: 'Replay deferred cloud jobs (fact-checks, live web plagiarism, citation lookups) queued during offline/exhausted periods', responses: { '200': { description: 'Queue replay summary' } } },
+      },
+      '/api/v1/ai-routing/cache': {
+        delete: { summary: 'Flush SHA-256 inference response cache', responses: { '200': { description: 'Cache cleared status' } } },
+      },
     },
   };
 }
