@@ -1,0 +1,63 @@
+name: Veritas Security, Coverage & Quality CI Gate
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  security-and-test-gate:
+    name: Typecheck, Audit, Unit/API/Security Tests & >=95% Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: TypeScript static typecheck
+        run: npm run lint
+
+      - name: Supply-chain dependency audit (fail on high/critical CVEs)
+        run: npm audit --audit-level=high
+
+      - name: Run Unit, Integration, API, Pen-Test & AI Validation suite with >=95% coverage gate
+        run: npm run test:coverage
+
+      - name: Production Vite bundle build check
+        run: npm run build
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: veritas-coverage-report
+          path: coverage/
+
+  visual-regression-gate:
+    name: Real Browser Visual Regression (360px / 768px / 1440px, Light & Dark)
+    runs-on: ubuntu-latest
+    needs: security-and-test-gate
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Run Playwright cross-viewport visual audit
+        run: npm run test:visual

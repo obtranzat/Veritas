@@ -1,0 +1,106 @@
+services:
+  veritas-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - VERITAS_REQUIRE_AUTH=${VERITAS_REQUIRE_AUTH:-false}
+      - VERITAS_FRAME_DENY=${VERITAS_FRAME_DENY:-true}
+      - VERITAS_GLOBAL_RPM=${VERITAS_GLOBAL_RPM:-600}
+      - DATABASE_URL=postgresql://veritas:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/veritas
+      - REDIS_URL=redis://redis:6379
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WHISPER_ASR_URL=http://whisper:9000
+      - TESSERACT_URL=http://tesseract:8884
+    volumes:
+      - veritas_data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - POSTGRES_USER=veritas
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      - POSTGRES_DB=veritas
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U veritas"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    security_opt:
+      - no-new-privileges:true
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - ASR_MODEL=base
+      - ASR_ENGINE=faster_whisper
+    ports:
+      - "127.0.0.1:9000:9000"
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  visual-regression:
+    image: mcr.microsoft.com/playwright:v1.65.1-noble
+    profiles: ["test"]
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - VERITAS_BASE_URL=http://veritas-app:3000
+      - CI=true
+    depends_on:
+      - veritas-app
+    command: ["npx", "playwright", "test"]
+
+volumes:
+  veritas_data:
+  postgres_data:
+  redis_data:
+  ollama_data:
